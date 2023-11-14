@@ -4,18 +4,27 @@ import numpy as np
 import imageio
 import decord
 import torch
+import math
 from decord import VideoLoader
 from decord import cpu, gpu
 
 class ImitationDataLoader():
     # Imitation learning data loader. Basically just a wrapper for
     # the decoder video loader that also handles label loading. 
-    def __init__(self,video_name_list, batch_size = 64, video_directory = '../../data/sim_video_clips/',label_directory = '../../data/sim_labels/'):
+    # see https://github.com/dmlc/decord
+    def __init__(self,
+                 video_name_list, 
+                 batch_size = 64, 
+                 video_directory = '../../data/sim_video_clips/',
+                 label_directory = '../../data/sim_labels/',
+                 video_size = (720,1280)):
         decord.bridge.set_bridge('torch')
         video_files = []
         for name in video_name_list:
             video_files.append(video_directory + 'vid_' + name + '.mp4')
-        self.vl = VideoLoader(video_files, ctx=[cpu(0)], shape=(batch_size,720,1280,3), interval=0, skip=0, shuffle=1)
+        self.vl = VideoLoader(video_files, ctx=[cpu(0)], shape=(batch_size,video_size[0],video_size[1],3), interval=0, skip=0, shuffle=1)
+        self.batch_size = batch_size
+        self.video_size = video_size
         # notes on shuffling above - 
         """
         shuffle = -1  # smart shuffle mode, based on video properties, (not implemented yet)
@@ -36,21 +45,37 @@ class ImitationDataLoader():
             steer_temp = np.load(label_directory + 'label_steering_'+video_file+'.npy')
             steering_labels.append(steer_temp.tolist())
         self.steering_labels = steering_labels
-
+    def __len__(self):
+        return self.vl.__len__()
     def __iter__(self):
         return self
     
     def __next__(self):
         try:
             video_batch, indices = self.vl.__next__()
-            steering_batch = []
+            mag_batch = []
+            dir_batch = []
             safety_batch = []
             for index in indices:
-                steering_batch.append(self.steering_labels[index[0]][index[1]])
+                mag_batch.append(abs(self.steering_labels[index[0]][index[1]]))
+                dir_batch.append(np.sign(self.steering_labels[index[0]][index[1]])+1)
                 safety_batch.append(self.safety_labels[index[0]][index[1]])
-            return video_batch,torch.tensor(steering_batch),torch.tensor(safety_batch)
+            # converts video to greyscale
+            video_batch = self.rgb2gray(video_batch)
+            # puts the steering/safety stuff into right tensor size
+            labels = torch.zeros((self.batch_size,3))
+            labels[:,0] = torch.tensor(mag_batch)
+            labels[:,1] = torch.tensor(dir_batch)
+            labels[:,2] = torch.tensor(safety_batch)
+            video_batch = torch.reshape(video_batch,(self.batch_size,1,self.video_size[0],self.video_size[1]))
+            return video_batch,labels
         except:
             raise StopIteration
+    def rgb2gray(self,rgb):
+        # little helper function for greyscale conversion
+        r, g, b = rgb[:,:,:,0], rgb[:,:,:,1], rgb[:,:,:,2]
+        gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+        return gray
 
 # note - this should not be used. it is inefficent, just kept for posterity 
 class ImitationDatasetOld(Dataset):
@@ -101,12 +126,13 @@ class ImitationDatasetOld(Dataset):
         frame = self.video_object_list[vid_file_index].get_data(frame_index)
         #print(frame.shape)
         frame = self.rgb2gray(frame)
+        # converts into (steer_mag,steer_dir,safety) - that's regression, 3 classes, boolean 
         steer = self.steering_labels[idx]
         safety = self.safety_labels[idx]
         return frame, steer, safety
     
     def rgb2gray(self,rgb):
         # little helper function for greyscale conversion
-        r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
+        r, g, b = rgb[:,:,:,0], rgb[:,:,:,1], rgb[:,:,:,2]
         gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-        return gray
+        return gray/256.0
