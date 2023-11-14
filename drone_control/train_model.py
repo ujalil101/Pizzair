@@ -28,7 +28,7 @@ batch_size = 8
 pizzair_model = PizzairNet(ResidualBlock, [2,2,2,2])
 pizzair_model.to(device)
 num_epochs = 2
-optimizer = torch.optim.AdamW(pizzair_model.parameters(),lr=5e-4)
+optimizer = torch.optim.AdamW(pizzair_model.parameters(),lr=1e-4)
 
 training_losses = np.zeros(num_epochs)
 

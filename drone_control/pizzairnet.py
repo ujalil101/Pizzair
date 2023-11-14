@@ -25,9 +25,9 @@ class PizzairNet(nn.Module):
         self.layer3 = self._make_layer(block, 512, layers[3], stride = 2)
         self.avgpool = nn.AvgPool2d(7, stride=1)
         self.fc1 = nn.Linear(295936, 1024)
-        self.fc_mag = nn.Linear(1024, 1) # single steering magnitude
-        self.fc_dir = nn.Linear(1024, 3) # left, center, right
-        self.fc_safety = nn.Linear(1024, 2) # safe, dangerous
+        self.fc_mag = nn.Linear(295936, 1) # single steering magnitude
+        self.fc_dir = nn.Linear(295936, 3) # left, center, right
+        self.fc_safety = nn.Linear(295936, 2) # safe, dangerous
         self.activation = nn.SiLU()
         
     def _make_layer(self, block, planes, blocks, stride=1):
@@ -58,8 +58,8 @@ class PizzairNet(nn.Module):
 
         # first bit of not conv stuff
         x = self.avgpool(x)
-        x = x.view(x.size(0), -1)
-        x = self.activation(self.fc1(x))
+        x = self.activation(x.view(x.size(0), -1))
+        #x = self.activation(self.fc1(x))
 
         # output layers
         mag = self.fc_mag(x)
