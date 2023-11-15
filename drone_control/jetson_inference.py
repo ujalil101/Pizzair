@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import random
+import time
 from pizzairnet import PizzairNet, ResidualBlock
 def rgb2gray(rgb):
         # little helper function for greyscale conversion
@@ -18,13 +19,16 @@ vid = cv2.VideoCapture(0)
 vid.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 # loads machine learning stuff
-pizzair_model = torch.load('models/pizzairnet_v1_checkpoint_24.pth')
+pizzair_model = torch.load('models/pizzairnet_v1_checkpoint_100.pth')
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pizzair_model.to(device)
 pizzair_model.eval()
-with torch.inference_mode():
+with torch.no_grad():
+    frame_counter = 0
+    fps = 0
+    last_time = time.time()
     while(True): 
-        
+
         # Capture the video frame 
         # by frame 
         ret, frame = vid.read() 
@@ -41,10 +45,22 @@ with torch.inference_mode():
         #print("\r", end="")
         mag = Y_train_hat[0].item()
         dir = Y_train_hat[1].tolist()[0]
-
         safe = Y_train_hat[2].tolist()[0]
+        print_string = ''
+        # adds network output
+        print_string += ('Mag: ' + str(mag) + ' Direction: '+ str(np.argmax(dir)-1) + ' safe: ' + str(np.argmax(safe)))
+        # adds operation speed
+        print_string += (' | FPS: ' + str(fps))
+        print(print_string, end='\r')
 
-        print('Mag: ' + str(mag) + ' Direction: '+ str(np.argmax(dir)-1) + ' safe: ' + str(np.argmax(safe)), end='\r')
+        # time stuff
+        if (time.time()-last_time) >= 1.0:
+            fps = frame_counter
+            frame_counter = 0
+            last_time = time.time()
+        else:
+            #print(time.time()-last_time)
+            frame_counter += 1
 
         # the 'q' button is set as the 
         # quitting button you may use any 
