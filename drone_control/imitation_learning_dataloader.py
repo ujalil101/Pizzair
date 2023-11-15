@@ -17,12 +17,13 @@ class ImitationDataLoader():
                  batch_size = 64, 
                  video_directory = '../../data/sim_video_clips/',
                  label_directory = '../../data/sim_labels/',
-                 video_size = (720,1280)):
+                 #video_size = (720,1280)):
+                 video_size = (216,384)):
         decord.bridge.set_bridge('torch')
         video_files = []
         for name in video_name_list:
             video_files.append(video_directory + 'vid_' + name + '.mp4')
-        self.vl = VideoLoader(video_files, ctx=[cpu(0)], shape=(batch_size,video_size[0],video_size[1],3), interval=0, skip=0, shuffle=2)
+        self.vl = VideoLoader(video_files, ctx=[cpu(0)], shape=(batch_size,video_size[0],video_size[1],3), interval=0, skip=0, shuffle=1)
         self.batch_size = batch_size
         self.video_size = video_size
         # notes on shuffling above - 

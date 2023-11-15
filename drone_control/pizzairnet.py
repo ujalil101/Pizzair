@@ -24,11 +24,11 @@ class PizzairNet(nn.Module):
         self.layer2 = self._make_layer(block, 256, layers[2], stride = 2)
         self.layer3 = self._make_layer(block, 512, layers[3], stride = 2)
         self.avgpool = nn.AvgPool2d(7, stride=1)
-        self.fc1 = nn.Linear(295936, 1024)
-        self.fc_mag = nn.Linear(295936, 1) # single steering magnitude
-        self.fc_dir = nn.Linear(295936, 3) # left, center, right
-        self.fc_safety = nn.Linear(295936, 2) # safe, dangerous
-        self.activation = nn.SiLU()
+        self.fc1 = nn.Linear(3072, 1024)
+        self.fc_mag = nn.Linear(1024, 1) # single steering magnitude
+        self.fc_dir = nn.Linear(1024, 3) # left, center, right
+        self.fc_safety = nn.Linear(1024, 2) # safe, dangerous
+        self.activation = nn.ReLU()
         
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
@@ -59,7 +59,7 @@ class PizzairNet(nn.Module):
         # first bit of not conv stuff
         x = self.avgpool(x)
         x = self.activation(x.view(x.size(0), -1))
-        #x = self.activation(self.fc1(x))
+        x = self.activation(self.fc1(x))
 
         # output layers
         mag = self.fc_mag(x)
@@ -69,7 +69,7 @@ class PizzairNet(nn.Module):
         return [mag,direc,safe]
     def loss(self,y_pred,y_true,epoch,regression_warmup=True):
         # weighting parameters - gotta tune these manually
-        alpha_mag = 0
+        alpha_mag = 1
         alpha_dir = 1
         alpha_safe = 1
 
@@ -93,7 +93,7 @@ class PizzairNet(nn.Module):
 
         # adds and weights accordingly, including epsilon thing
         decay = 1/10
-        epoch_null = 7
+        epoch_null = 10
         ce_loss_multiplier = 1
         if regression_warmup:
             ce_loss_multiplier = max(0,(1-np.exp(-decay*(epoch-epoch_null))))

@@ -18,7 +18,7 @@ vid = cv2.VideoCapture(0)
 vid.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 # loads machine learning stuff
-pizzair_model = torch.load('models/pizzairnet_v1_1_no_reg_checkpoint_1.pth')
+pizzair_model = torch.load('models/pizzairnet_v1_checkpoint_1.pth')
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pizzair_model.to(device)
 pizzair_model.eval()
@@ -29,14 +29,14 @@ with torch.inference_mode():
         # by frame 
         ret, frame = vid.read() 
 
-        \
+        frame = cv2.resize(frame,(384,216))
         # Display the resulting frame 
         cv2.imshow('frame', frame) 
         
         # runs through model
         frame = torch.tensor(frame).to(torch.float32).to(device).unsqueeze(0) # certified pytorch moment
         frame = rgb2gray(frame).unsqueeze(0)
-        #print(frame.shape)
+        print(frame.shape)
         Y_train_hat = pizzair_model(frame)
         #print("\r", end="")
         mag = Y_train_hat[0].item()
