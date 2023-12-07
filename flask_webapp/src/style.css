@@ -1,0 +1,38 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #DBA24A;
+    font-family: 'Imprima', sans-serif;
+}
+
+#pizzair {
+    color: white;
+    font-size: 4em; /* Adjust the font size as needed */
+    margin-bottom: 20px;
+}
+
+.buttons-container {
+    display: flex;
+}
+
+.button {
+    padding: 10px 20px;
+    margin: 5px;
+    background-color: #DBA24A;
+    color: #CE0000;
+    border: 2px solid #CE0000;
+    border-radius: 20px; /* Adjust the border-radius to make it more or less oval */
+    text-decoration: none;
+    font-family: 'Imprima', sans-serif;
+    font-size: 1em;
+}
+
+.button:hover {
+    background-color: #CE0000;
+    color: #DBA24A;
+}
