@@ -66,14 +66,21 @@ with torch.no_grad():
             #print(frame.shape)
             Y_train_hat = pizzair_model(frame)
             #print("\r", end="")
-            mag = Y_train_hat[0].item()
-            dir = np.argmax(Y_train_hat[1].tolist()[0])-1
+            mag = abs(Y_train_hat[0].item())
+            dir = np.argmax([Y_train_hat[1].tolist()[0][0],Y_train_hat[1].tolist()[0][2]])
             safe = np.argmax(Y_train_hat[2].tolist()[0])
             print_string = ''
 
             ### Display Output Section ###
+            dir_print = ''
+            if dir == 0:
+                dir_print = 'L'
+            elif dir == 1:
+                dir_print = 'R'
+            else:
+                dir_print = 'R'
             # adds network output
-            print_string += ('Mag: ' + str(round(mag,5)) + ' Direction: '+ str(dir) + ' safe: ' + str(safe))
+            print_string += ('Mag: ' + str(round(mag,5)) + ' Direction: '+ str(dir_print) + ' safe: ' + str(safe))
             # adds operation speed
             print_string += (' | FPS: ' + str(fps))
             print(print_string, end='\r')
@@ -94,10 +101,10 @@ with torch.no_grad():
                         drone.move(forward=max_speed)
                     else:
                         # unsafe - go half speed, avoid things
-                        if dir == 1: # go right\
-                            drone.move(forward=max_speed/2,ccw=mag)
-                        elif dir == -1: # go left
-                            drone.move(forward=max_speed/2,cw=mag)
+                        if dir == 1: # go right
+                            drone.move(forward=0,cw=mag)
+                        elif dir == 0: # go left
+                            drone.move(forward=0,ccw=mag)
                         else: # go straight
                             drone.move(forward=max_speed/2)
                 else:
