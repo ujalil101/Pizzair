@@ -83,7 +83,7 @@ key_list = []
 for frame in vid:
     if 'ax' in globals(): ax.remove()
     ax = plt.imshow(frame)
-    plt.pause(0.002) # I suspect this value could be machine-specific - try increasing it if you have problems
+    plt.pause(0.001) # I supect this value could be machine-specific - try increasing it if you have problems
     key_press = str(msvcrt.getch())
     # checks for escape key - ends program if pressed
     if key_press == "b'\\x1b'": # the escape key 

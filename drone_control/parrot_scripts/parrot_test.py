@@ -12,7 +12,7 @@ def rgb2gray(rgb):
         # little helper function for greyscale conversion
         r, g, b = rgb[:,:,:,0], rgb[:,:,:,1], rgb[:,:,:,2]
         gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-        return gray
+        return gray/256
 print('Starting...')
 # various parameters and whatnot
 max_speed = 0.1
@@ -25,14 +25,14 @@ vid.set(cv2.CAP_PROP_FRAME_WIDTH, 384)
 vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 216)
 ret, frame = vid.read()
 
-# sets up drone
+# sets up drone 
 print('Drone initializing...')
 drone = ARDrone()
 drone.navdata_ready.wait()  # wait until NavData is ready
 
 # loads machine learning stuff
 print('ML initializing...')
-pizzair_model = torch.load('../models/pizzairnet_v1_checkpoint_100.pth')
+pizzair_model = torch.load('../models/model_v2_all_ft.pth')
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pizzair_model.to(device)
 pizzair_model.eval()
@@ -96,7 +96,7 @@ with torch.no_grad():
             ### Drone Control Section ###
             if do_control:
                 if not hover:
-                    if safe:
+                    if safe == 0:
                         # safe - go forward
                         drone.move(forward=max_speed)
                     else:
@@ -111,10 +111,11 @@ with torch.no_grad():
                     drone.hover()
             ### Safety/Loop Exiting Section ###
             # desired button of your choice 
-            if cv2.waitKey(1) & 0xFF == ord('h'): 
-                hover = not hover
-            if cv2.waitKey(1) & 0xFF == ord('q'): 
+            pressedKey = cv2.waitKey(1) & 0xFF
+            if pressedKey == ord('q'):
                 break
+            elif pressedKey == ord('h'):
+                hover = not hover
 
 ### Flight Loop Over - Attempts Landing ###
 print('Landing... ')

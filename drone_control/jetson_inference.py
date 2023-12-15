@@ -12,14 +12,14 @@ def rgb2gray(rgb):
         # little helper function for greyscale conversion
         r, g, b = rgb[:,:,:,0], rgb[:,:,:,1], rgb[:,:,:,2]
         gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-        return gray
+        return gray/256
   
 # define a video capture object 
 vid = cv2.VideoCapture(0) 
 vid.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 vid.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 # loads machine learning stuff
-pizzair_model = torch.load('models/pizzairnet_v1_checkpoint_100.pth')
+pizzair_model = torch.load('models/model_v2_all_ft.pth')
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pizzair_model.to(device)
 pizzair_model.eval()
@@ -48,6 +48,7 @@ with torch.no_grad():
         safe = Y_train_hat[2].tolist()[0]
         print_string = ''
         # adds network output
+        #print(safe)
         print_string += ('Mag: ' + str(mag) + ' Direction: '+ str(np.argmax(dir)-1) + ' safe: ' + str(np.argmax(safe)))
         # adds operation speed
         print_string += (' | FPS: ' + str(fps))

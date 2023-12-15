@@ -76,7 +76,7 @@ class ImitationDataLoader():
         # little helper function for greyscale conversion
         r, g, b = rgb[:,:,:,0], rgb[:,:,:,1], rgb[:,:,:,2]
         gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-        return gray
+        return gray/256
 
 # note - this should not be used. it is inefficent, just kept for posterity 
 class ImitationDatasetOld(Dataset):

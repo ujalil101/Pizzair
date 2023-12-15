@@ -66,7 +66,7 @@ class PizzairNet(nn.Module):
         return [mag,direc,safe]
     def loss(self,y_pred,y_true,epoch,regression_warmup=True):
         # weighting parameters - gotta tune these manually
-        alpha_mag = 1
+        alpha_mag = 0.5
         alpha_dir = 1
         alpha_safe = 1
 
