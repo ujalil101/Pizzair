@@ -11,12 +11,12 @@ import time
 def rgb2gray_airsim(rgb):
         # little helper function for greyscale conversion
         r, g, b = rgb[:,:,:,0], rgb[:,:,:,1], rgb[:,:,:,2]
-        mult_factor = 0.91
+        mult_factor = 0.87
         r_weight = 0.2989*mult_factor
         g_weight = 0.5870*mult_factor
         b_weight = 0.1140*mult_factor
         gray = r_weight * r + g_weight * g + b_weight * b
-        return gray
+        return gray/256
 print('Starting...')
 # various parameters and whatnot
 max_speed = 2
@@ -24,7 +24,7 @@ do_control = True # Determins if actual drone commands are sent. Set to FALSE fo
 
 # loads machine learning stuff
 print('ML initializing...')
-pizzair_model = torch.load('../models/pizzairnet_v1_checkpoint_100.pth')
+pizzair_model = torch.load('../models/model_v2_all_ft.pth')
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pizzair_model.to(device)
 pizzair_model.eval()
@@ -39,7 +39,7 @@ client.enableApiControl(True)
 
 # starts the drone at nice location
 position = airsim.Vector3r(-45 , -4, 0)
-heading = airsim.utils.to_quaternion(0, 0, -45)
+heading = airsim.utils.to_quaternion(0, 0, -44.8)
 pose = airsim.Pose(position, heading)
 client.simSetVehiclePose(pose, True)
 
@@ -136,7 +136,7 @@ with torch.no_grad():
         
 ## ends flight. lands.
 print('Landing ... ')
-client.landAsync(timeout_sec=5).join()
+client.landAsync(timeout_sec=0.5).join()
 
 # end of flight. disables program.
 client.reset()
