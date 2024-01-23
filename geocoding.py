@@ -19,6 +19,10 @@ def geocode_address(api_key, user_address):
         print(f'Location not found for the address: {user_address}')
         return None
 
+# location.address is the variable that holds the detailed address the google maps finds, after user inputs their own address u can show this variable to confirm
+# if this is the address user intended to input. I havent put it in myself because we dont need it outside of that, we are just going to send the coordinates.
+
+
 # Replace with your Google Maps API Key
 api_key = 'AIzaSyCp2utU1aL7MPxKMjCGJMuNpLpAKDnOie8'
 
