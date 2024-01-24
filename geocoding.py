@@ -24,7 +24,7 @@ def geocode_address(api_key, user_address):
 
 
 # Replace with your Google Maps API Key
-api_key = 'AIzaSyCp2utU1aL7MPxKMjCGJMuNpLpAKDnOie8'
+api_key = ''
 
 user_address = ''    # Get address from web server
 
