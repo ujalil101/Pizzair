@@ -12,27 +12,39 @@ body {
 
 #pizzair {
     color: white;
-    font-size: 4em; /* Adjust the font size as needed */
+    font-size: 4em;
     margin-bottom: 20px;
 }
 
-.buttons-container {
+.input-container {
     display: flex;
+    flex-direction: column; /* Change to column to stack elements vertically */
+    align-items: center;
 }
 
-.button {
-    padding: 10px 20px;
+.input-container input {
+    padding: 8px;
     margin: 5px;
+    border: 2px solid #CE0000;
+    border-radius: 5px;
+    font-size: 1em;
+    width: 250px;
+    outline: none;
+}
+
+.submit-button {
+    padding: 10px 20px;
+    margin-top: 10px; /* Add margin to separate the button from text boxes */
     background-color: #DBA24A;
     color: #CE0000;
     border: 2px solid #CE0000;
-    border-radius: 20px; /* Adjust the border-radius to make it more or less oval */
+    border-radius: 20px;
     text-decoration: none;
     font-family: 'Imprima', sans-serif;
     font-size: 1em;
 }
 
-.button:hover {
+.submit-button:hover {
     background-color: #CE0000;
     color: #DBA24A;
 }
