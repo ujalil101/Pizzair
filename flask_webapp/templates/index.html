@@ -29,9 +29,8 @@
             var destination = document.getElementById('destination').value;
 
             if (startingPoint && destination) {
-                // Call a Python script or API to perform geocoding
-                // You can use AJAX or fetch to send the data to the server
-                // Example:
+                // Call a Python script to perform geocoding
+
                 fetch('/geocode', {
                     method: 'POST',
                     headers: {
@@ -45,7 +44,7 @@
                 .then(response => response.json())
                 .then(data => {
                     console.log(data);
-                    // Handle the response from the server (coordinates or error)
+                    // Handle the response from the server 
                 })
                 .catch(error => {
                     console.error('Error:', error);
