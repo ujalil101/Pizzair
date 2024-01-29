@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Website Title</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+    <div id="pizzair">Pizzair</div>
+
+    <div class="input-container">
+        <!-- Input field for Starting Point -->
+        <input type="text" id="startingPoint" name="startingPoint" placeholder="Street, City, State Zip, Country">
+
+        <!-- Input field for Destination -->
+        <input type="text" id="destination" name="destination" placeholder="Street, City, State Zip, Country">
+
+        <!-- Submit button -->
+        <button class="submit-button" onclick="submitForm()">Submit</button>
+    </div>
+
+    <script>
+        function submitForm() {
+            var startingPoint = document.getElementById('startingPoint').value;
+            var destination = document.getElementById('destination').value;
+
+            if (startingPoint && destination) {
+                // Call a Python script or API to perform geocoding
+                // You can use AJAX or fetch to send the data to the server
+                // Example:
+                fetch('/geocode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        startingPoint: startingPoint,
+                        destination: destination,
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    // Handle the response from the server (coordinates or error)
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            } else {
+                alert('Please enter both starting point and destination addresses.');
+            }
+        }
+    </script>
+</body>
+
+</html>
