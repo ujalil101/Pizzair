@@ -5,6 +5,6 @@
 
 Initial arch diagram illustrating how the web application will communicate with the drone. 
 
-The logistics of deployment are still under consideration. I am undecided between incorporating the Flask application directly into the Jetson Nano, with the web application on localhost, or deploying the web application to a server.
+## SWE Arch Diagram between web app and Jetson Nano
+![Screenshot 2024-01-29 at 5 21 03 PM](https://github.com/ujalil101/Pizzair/assets/74789609/3666eff7-9087-4d4c-97e7-82f90717066e)
 
-note from Quentin - if you deploy it on the Jetson, I will come to your house and spit on you!
