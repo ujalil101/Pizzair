@@ -13,11 +13,11 @@
     <div id="pizzair">Pizzair</div>
 
     <div class="input-container">
-        <!-- Input field for Starting Point -->
-        <input type="text" id="startingPoint" name="startingPoint" placeholder="Street, City, State Zip, Country">
+        <!-- Input Starting Point -->
+        <input type="text" id="startingPoint" name="startingPoint" placeholder="Street, City, State, Zip, Country">
 
-        <!-- Input field for Destination -->
-        <input type="text" id="destination" name="destination" placeholder="Street, City, State Zip, Country">
+        <!-- Input Destination -->
+        <input type="text" id="destination" name="destination" placeholder="Street, City, State, Zip, Country">
 
         <!-- Submit button -->
         <button class="submit-button" onclick="submitForm()">Submit</button>
@@ -29,7 +29,7 @@
             var destination = document.getElementById('destination').value;
 
             if (startingPoint && destination) {
-                // Call a Python script to perform geocoding
+                // Call ahmets geocoding scirpt
 
                 fetch('/geocode', {
                     method: 'POST',
@@ -44,7 +44,7 @@
                 .then(response => response.json())
                 .then(data => {
                     console.log(data);
-                    // Handle the response from the server 
+                    // Handle response from the server 
                 })
                 .catch(error => {
                     console.error('Error:', error);
