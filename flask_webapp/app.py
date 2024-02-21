@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from geocoding import geocode_address
 from dotenv import load_dotenv
+from geo_data_to_dynamodb import insert_into_dynamodb
 import os
 load_dotenv
 app = Flask(__name__)
@@ -14,20 +15,25 @@ def index():
 
 @app.route('/geocode', methods=['POST'])
 def geocode():
-
     data = request.get_json()
-
-    # call geocoding function to get coordiantes for starting point
+    
+    
+    
     starting_point_coordinates = geocode_address(google_maps_api_key, data['startingPoint'])
-    # call geocoding function to get coordiantes for destination point
+    print(starting_point_coordinates)
     destination_coordinates = geocode_address(google_maps_api_key, data['destination'])
+    #print(starting_point_coordinates[0])
+    #print(destination_coordinates[1])
 
-    print(starting_point_coordinates, destination_coordinates)
+    # Call the function to insert data into DynamoDB
+
+    insert_into_dynamodb(starting_point_coordinates[0], starting_point_coordinates[1])
+   # insert_into_dynamodb(destination_coordinates[0], destination_coordinates[1])
+
     return jsonify({
         'startingPoint': starting_point_coordinates,
         'destination': destination_coordinates
     })
-
 
 if __name__ == "__main__":
     app.run(debug=True)
