@@ -19,9 +19,7 @@ dynamodb = session.client('dynamodb')
 
 
 
-
-# function to insert data to dynamodb table
-def insert_into_dynamodb(longitude, latitude):
+def insert_into_dynamodb(starting_longitude, starting_latitude, destination_longitude, destination_latitude):
     try:
         session = boto3.Session(
             aws_access_key_id=Access_Key,
@@ -34,13 +32,16 @@ def insert_into_dynamodb(longitude, latitude):
         response = dynamodb.put_item(
             TableName=table_name,
             Item={
-                'user_loc': {'S': 'Location'},  
-                'Latitude': {'S': str(latitude)},  
-                'Longitude': {'S': str(longitude)}  
+                'user_loc': {'S': 'Sending'},  
+                'StartingLatitude': {'S': str(starting_latitude)},
+                'StartingLongitude': {'S': str(starting_longitude)},
+                'DestinationLatitude': {'S': str(destination_latitude)},
+                'DestinationLongitude': {'S': str(destination_longitude)},
             }
         )
         print("Data inserted into DynamoDB:", response)
 
     except Exception as e:
         print("Error inserting data into DynamoDB:", e)
+
 

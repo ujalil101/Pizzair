@@ -9,7 +9,25 @@
 <body>
     <h1>Displaying Data from Jetson Nano</h1>
     <div>
-       
+        {% if data %}
+        <h2>Image</h2>
+        <p>{{ data[0]['Image']['S'] }}</p>
+        
+        <h2>GPS coordinates</h2>
+        <p>Latitude: {{ data[0]['GPS']['M']['latitude']['N'] }}</p>
+        <p>Longitude: {{ data[0]['GPS']['M']['longitude']['N'] }}</p>
+        
+        <h2>Accelerometer info</h2>
+        <p>X: {{ data[0]['Accelerometer']['M']['x']['N'] }}</p>
+        <p>Y: {{ data[0]['Accelerometer']['M']['y']['N'] }}</p>
+        <p>Z: {{ data[0]['Accelerometer']['M']['z']['N'] }}</p>
+        
+        <h2>Control info</h2>
+        <p>Speed: {{ data[0]['Control']['M']['speed']['N'] }}</p>
+        <p>Direction: {{ data[0]['Control']['M']['direction']['S'] }}</p>
+        {% else %}
+        <p>No data available</p>
+        {% endif %}
     </div>
 </body>
 </html>
