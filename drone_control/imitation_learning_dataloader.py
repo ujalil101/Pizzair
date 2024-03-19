@@ -4,9 +4,11 @@ import numpy as np
 import imageio
 import decord
 import torch
+import torch.nn.functional as F
 import math
 from decord import VideoLoader
 from decord import cpu, gpu
+from pizzairnet import rgb2gray
 
 class ImitationDataLoader():
     # Imitation learning data loader. Basically just a wrapper for
@@ -24,6 +26,7 @@ class ImitationDataLoader():
         for name in video_name_list:
             video_files.append(video_directory + 'vid_' + name + '.mp4')
         self.vl = VideoLoader(video_files, ctx=[cpu(0)], shape=(batch_size,video_size[0],video_size[1],3), interval=0, skip=0, shuffle=1)
+        self.vl.reset()
         self.batch_size = batch_size
         self.video_size = video_size
         # notes on shuffling above - 
@@ -52,7 +55,7 @@ class ImitationDataLoader():
         return self
     
     def __next__(self):
-        try:
+        #try:
             video_batch, indices = self.vl.__next__()
             mag_batch = []
             dir_batch = []
@@ -62,7 +65,7 @@ class ImitationDataLoader():
                 dir_batch.append(np.sign(self.steering_labels[index[0]][index[1]])+1)
                 safety_batch.append(self.safety_labels[index[0]][index[1]])
             # converts video to greyscale
-            video_batch = self.rgb2gray(video_batch)
+            video_batch = rgb2gray(video_batch)
             # puts the steering/safety stuff into right tensor size
             labels = torch.zeros((self.batch_size,3))
             labels[:,0] = torch.tensor(mag_batch)
@@ -70,13 +73,9 @@ class ImitationDataLoader():
             labels[:,2] = torch.tensor(safety_batch)
             video_batch = torch.reshape(video_batch,(self.batch_size,1,self.video_size[0],self.video_size[1]))
             return video_batch,labels
-        except:
-            raise StopIteration
-    def rgb2gray(self,rgb):
-        # little helper function for greyscale conversion
-        r, g, b = rgb[:,:,:,0], rgb[:,:,:,1], rgb[:,:,:,2]
-        gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-        return gray/256
+        #except:
+        #    raise StopIteration
+
 
 # note - this should not be used. it is inefficent, just kept for posterity 
 class ImitationDatasetOld(Dataset):

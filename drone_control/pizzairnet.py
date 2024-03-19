@@ -96,7 +96,6 @@ class PizzairNet(nn.Module):
             ce_loss_multiplier = max(0,(1-np.exp(-decay*(epoch-epoch_null))))
         loss = (alpha_mag * mag_loss) + ce_loss_multiplier * ((alpha_dir * dir_loss) + (alpha_safe * safe_loss))
         return loss
-    
 class ResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride = 1, downsample = None):
         super(ResidualBlock, self).__init__()
@@ -120,3 +119,16 @@ class ResidualBlock(nn.Module):
         out += residual
         out = self.relu(out)
         return out
+def rgb2gray(rgb):
+        ## little helper function for greyscale conversion
+        # grabs each channel
+        r, g, b = rgb[:,:,:,0], rgb[:,:,:,1], rgb[:,:,:,2] #[batch,row,height,channel]
+        # normalizes independently
+        #print(type(r))
+        r = F.normalize(r.float(), dim=(1, 2))
+        g = F.normalize(g.float(), dim=(1, 2))
+        b = F.normalize(b.float(), dim=(1, 2))
+        # adds and roughly weights each to human vision
+        gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+        return gray
+        #return gray/256

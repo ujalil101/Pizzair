@@ -7,16 +7,21 @@ import tempfile
 import pprint
 import cv2
 import torch
+import torch.nn.functional as F
 import time
-def rgb2gray_airsim(rgb):
-        # little helper function for greyscale conversion
-        r, g, b = rgb[:,:,:,0], rgb[:,:,:,1], rgb[:,:,:,2]
-        mult_factor = 0.87
-        r_weight = 0.2989*mult_factor
-        g_weight = 0.5870*mult_factor
-        b_weight = 0.1140*mult_factor
-        gray = r_weight * r + g_weight * g + b_weight * b
-        return gray/256
+def rgb2gray(rgb):
+        ## little helper function for greyscale conversion
+        # grabs each channel
+        r, g, b = rgb[:,:,:,0], rgb[:,:,:,1], rgb[:,:,:,2] #[batch,row,height,channel]
+        # normalizes independently
+        #print(type(r))
+        r = F.normalize(r.float(), dim=(1, 2))
+        g = F.normalize(g.float(), dim=(1, 2))
+        b = F.normalize(b.float(), dim=(1, 2))
+        # adds and roughly weights each to human vision
+        gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+        return gray
+        #return gray/256
 print('Starting...')
 # various parameters and whatnot
 max_speed = 2
@@ -78,7 +83,7 @@ with torch.no_grad():
         ### Machine Learning Inference Section ###
         # runs through model
         frame = torch.tensor(frame).to(torch.float32).to(device).unsqueeze(0) # certified pytorch moment
-        frame = rgb2gray_airsim(frame).unsqueeze(0)
+        frame = rgb2gray(frame).unsqueeze(0)
         #print(frame.shape)
         Y_train_hat = pizzair_model(frame)
         #print("\r", end="")
