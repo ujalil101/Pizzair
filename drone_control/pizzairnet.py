@@ -89,8 +89,8 @@ class PizzairNet(nn.Module):
         safe_loss = safe_ce(safe_pred,safe_true)
 
         # adds and weights accordingly, including epsilon thing
-        decay = 1/10
-        epoch_null = 10
+        epoch_null = 5
+        decay = 1/epoch_null
         ce_loss_multiplier = 1
         if regression_warmup:
             ce_loss_multiplier = max(0,(1-np.exp(-decay*(epoch-epoch_null))))

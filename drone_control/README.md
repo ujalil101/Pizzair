@@ -14,7 +14,7 @@ For some motivation for our approach, imitation learning combines the upsides of
 Pizzair is primarily trained with data from high visual-fidelity open-world videogames. Video games offer some advantages and disadvatages compared to colleting data from the real-world or in dedicated robot learning simulators (for instance, CARLA or AirSim). The advantages are a near-photorealism and stellar environment diversity. For example, Watch Dogs 2 looks nearly photorealistic and contains a scaled-down version of Northern California, including San Francisco and its many districts, suburbs in the Bay Area, and forested park environments. In comparision, CARLA has only a limited selection of small, homogenous maps and poor fidelity. The downsides are that video games are less flexible for researchers and have less realistic physics simulations. 
 
 
-Specifically, I collected around 30,000 image samples by flying around various environments in Watch Dogs 2, [INSERT OTHER GAMES] [TODO: continue this]
+Specifically, I collected around 30,000 image samples by flying around various environments in Watch Dogs 2, Forza Horizon 4, and a small number of samples from the real world collected in Brookline, Massachusets. 
 
 ## Simulation Evaluation
 
