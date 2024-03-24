@@ -7,6 +7,7 @@ import torch.nn.functional as F
 import numpy as np
 import random
 import time
+import encodings.idna
 #from pizzairnet import PizzairNet, ResidualBlock
 import sys
 # Imports stuff from parent folders which is a little involved
@@ -36,11 +37,14 @@ pizzair_model.to(device)
 pizzair_model.eval()
 
 # Initializes DynaDB connection
-#dynamodb = initialize_jetson_to_dynamo()
+connect_to_db = True
+if connect_to_db:
+     dynamodb = initialize_jetson_to_dynamo()
 
 # Grabs initial coordinate data from the DynaDB server. For now, just prints it out.
-#coordinates = fetch_from_dynamodb(dynamodb)
-#print('Destination:',coordinates)
+if connect_to_db:
+    coordinates = fetch_from_dynamodb(dynamodb)
+    print('Destination:',coordinates)
 
 with torch.no_grad():
     frame_counter = 0
@@ -60,6 +64,7 @@ with torch.no_grad():
         # runs through model
         frame = torch.tensor(frame).to(torch.float32).to(device).unsqueeze(0) # certified pytorch moment
         frame = rgb2gray(frame).unsqueeze(0)
+        #cv2.imshow('frame', frame) 
         #print(frame.shape)
         Y_train_hat = pizzair_model(frame)
         #print("\r", end="")
@@ -94,7 +99,7 @@ with torch.no_grad():
         gps_coordinates = {'latitude': {'N': '37.7749'}, 'longitude': {'N': '-122.4194'}}
         accelerometer_info = {'x': {'N': '0.5'}, 'y': {'N': '0.3'}, 'z': {'N': '0.7'}}
         control_info = {'mag': mag, 'direction': dir,'Safety': safe}
-        insert_data(dynamodb,image_url, gps_coordinates, accelerometer_info, control_info)
+        #insert_data(dynamodb,image_url, gps_coordinates, accelerometer_info, control_info)
     
     # After the loop release the cap object 
     vid.release() 

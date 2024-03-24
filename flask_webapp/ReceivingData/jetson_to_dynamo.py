@@ -1,6 +1,7 @@
 import boto3
 from dotenv import load_dotenv
 import os
+import time
 table_name = 'DataRetrieve'
 def initialize_jetson_to_dynamo():
     load_dotenv()
@@ -25,7 +26,8 @@ def insert_data(dynamodb,image_url, gps_coordinates, accelerometer_info, control
     try:
         
         item = {
-            'Retrieve': {'S': 'unique_value'},
+            #'Retrieve': {'S': 'unique_value'},
+            'Retrieve': {'S': time.time()},
             'Image': {'S': image_url},
             'GPS': {'M': gps_coordinates},
             'Accelerometer': {'M': accelerometer_info},
