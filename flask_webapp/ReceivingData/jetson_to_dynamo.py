@@ -29,8 +29,9 @@ def insert_data(dynamodb, image_url, gps_coordinates, accelerometer_info, contro
             'Image': {'S': image_url},
             'GPS': {'M': gps_coordinates},
             'Accelerometer': {'M': accelerometer_info},
-            'Control': {'M': control_info}
+            'Control': {'M': {key: {'S': str(value)} for key, value in control_info.items()}}
         }
+        
         
         # Insert data
         response = dynamodb.put_item(
@@ -42,14 +43,14 @@ def insert_data(dynamodb, image_url, gps_coordinates, accelerometer_info, contro
         print("Error inserting data into DynamoDB:", e)
 
 # fake data
+'''
+
+dynamodb = initialize_jetson_to_dynamo()
+
 image_url = 'https://cdn.mos.cms.futurecdn.net/76XArwuAqGZUGwffH2inpf-970-80.jpg'
 gps_coordinates = {'latitude': {'N': '37.7749'}, 'longitude': {'N': '-122.4194'}}
 accelerometer_info = {'x': {'N': '0.5'}, 'y': {'N': '0.3'}, 'z': {'N': '0.7'}}
-control_info = {
-    'mag': {'N': str(8)},      
-    'direction': {'S': str(8)},
-    'Safety': {'N': str(12)}   
-}
-dynamodb = initialize_jetson_to_dynamo()
+control_info = {'mag': '6.78', 'direction': '657567', 'Safety': '34435'}
 
-#insert_data(dynamodb, image_url, gps_coordinates, accelerometer_info, control_info)
+insert_data(dynamodb, image_url, gps_coordinates, accelerometer_info, control_info)
+'''
