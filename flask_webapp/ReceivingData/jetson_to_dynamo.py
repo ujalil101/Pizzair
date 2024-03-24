@@ -41,7 +41,7 @@ def insert_data(dynamodb, image_url, gps_coordinates, accelerometer_info, contro
     except Exception as e:
         print("Error inserting data into DynamoDB:", e)
 
-# fake data
+# fake data 
 image_url = 'https://cdn.mos.cms.futurecdn.net/76XArwuAqGZUGwffH2inpf-970-80.jpg'
 gps_coordinates = {'latitude': {'N': '37.7749'}, 'longitude': {'N': '-122.4194'}}
 accelerometer_info = {'x': {'N': '0.5'}, 'y': {'N': '0.3'}, 'z': {'N': '0.7'}}
