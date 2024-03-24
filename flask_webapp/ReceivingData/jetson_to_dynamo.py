@@ -22,12 +22,10 @@ def initialize_jetson_to_dynamo():
     return dynamodb
 
 
-def insert_data(dynamodb,image_url, gps_coordinates, accelerometer_info, control_info):
+def insert_data(dynamodb, image_url, gps_coordinates, accelerometer_info, control_info):
     try:
-        
         item = {
-            #'Retrieve': {'S': 'unique_value'},
-            'Retrieve': {'S': time.time()},
+            'Retrieve': {'S': str(time.time())},  
             'Image': {'S': image_url},
             'GPS': {'M': gps_coordinates},
             'Accelerometer': {'M': accelerometer_info},
@@ -48,5 +46,7 @@ image_url = 'https://example.com/image.jpg'
 gps_coordinates = {'latitude': {'N': '37.7749'}, 'longitude': {'N': '-122.4194'}}
 accelerometer_info = {'x': {'N': '0.5'}, 'y': {'N': '0.3'}, 'z': {'N': '0.7'}}
 control_info = {'speed': {'N': '50'}, 'direction': {'S': 'north'}}
+dynamodb = initialize_jetson_to_dynamo()  
 
-insert_data(image_url, gps_coordinates, accelerometer_info, control_info)
+
+insert_data(dynamodb, image_url, gps_coordinates, accelerometer_info, control_info)
