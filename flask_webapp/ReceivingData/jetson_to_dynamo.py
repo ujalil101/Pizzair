@@ -42,9 +42,9 @@ def insert_data(dynamodb,image_url, gps_coordinates, accelerometer_info, control
         print("Error inserting data into DynamoDB:", e)
 
 # fake data
-#image_url = 'https://example.com/image.jpg'
-#gps_coordinates = {'latitude': {'N': '37.7749'}, 'longitude': {'N': '-122.4194'}}
-#accelerometer_info = {'x': {'N': '0.5'}, 'y': {'N': '0.3'}, 'z': {'N': '0.7'}}
-#control_info = {'speed': {'N': '50'}, 'direction': {'S': 'north'}}
+image_url = 'https://example.com/image.jpg'
+gps_coordinates = {'latitude': {'N': '37.7749'}, 'longitude': {'N': '-122.4194'}}
+accelerometer_info = {'x': {'N': '0.5'}, 'y': {'N': '0.3'}, 'z': {'N': '0.7'}}
+control_info = {'speed': {'N': '50'}, 'direction': {'S': 'north'}}
 
-#insert_data(image_url, gps_coordinates, accelerometer_info, control_info)
+insert_data(image_url, gps_coordinates, accelerometer_info, control_info)

@@ -89,11 +89,12 @@ with torch.no_grad():
             break
 
         #### DynaDB Data Uploading ###
+        
         image_url = 'https://cdn.mos.cms.futurecdn.net/76XArwuAqGZUGwffH2inpf-970-80.jpg'
         gps_coordinates = {'latitude': {'N': '37.7749'}, 'longitude': {'N': '-122.4194'}}
         accelerometer_info = {'x': {'N': '0.5'}, 'y': {'N': '0.3'}, 'z': {'N': '0.7'}}
         control_info = {'mag': mag, 'direction': dir,'Safety': safe}
-        #insert_data(dynamodb,image_url, gps_coordinates, accelerometer_info, control_info)
+        insert_data(dynamodb,image_url, gps_coordinates, accelerometer_info, control_info)
     
     # After the loop release the cap object 
     vid.release() 
