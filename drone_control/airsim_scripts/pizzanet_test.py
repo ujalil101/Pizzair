@@ -9,19 +9,14 @@ import cv2
 import torch
 import torch.nn.functional as F
 import time
-def rgb2gray(rgb):
-        ## little helper function for greyscale conversion
-        # grabs each channel
-        r, g, b = rgb[:,:,:,0], rgb[:,:,:,1], rgb[:,:,:,2] #[batch,row,height,channel]
-        # normalizes independently
-        #print(type(r))
-        r = F.normalize(r.float(), dim=(1, 2))
-        g = F.normalize(g.float(), dim=(1, 2))
-        b = F.normalize(b.float(), dim=(1, 2))
-        # adds and roughly weights each to human vision
-        gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-        return gray
-        #return gray/256
+## Pizzairnet and stuff 
+import sys
+# Imports stuff from parent folders which is a little involved
+## Receiving
+sys.path.append('..')
+from pizzairnet import PizzairNet,ResidualBlock,rgb2gray,add_noise
+sys.path.pop(0)
+
 print('Starting...')
 # various parameters and whatnot
 max_speed = 2
@@ -29,7 +24,7 @@ do_control = True # Determins if actual drone commands are sent. Set to FALSE fo
 
 # loads machine learning stuff
 print('ML initializing...')
-pizzair_model = torch.load('../models/model_v2_all_ft.pth')
+pizzair_model = torch.load('../models/model_v3.3.pth')
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 pizzair_model.to(device)
 pizzair_model.eval()
@@ -78,18 +73,23 @@ with torch.no_grad():
         #img_rgb = np.flipud(img_rgb)
         frame = cv2.resize(img_rgb,(384,216))
         # Display the resulting frame 
-        cv2.imshow('frame', frame) 
+        #cv2.imshow('frame', frame) 
         
         ### Machine Learning Inference Section ###
         # runs through model
         frame = torch.tensor(frame).to(torch.float32).to(device).unsqueeze(0) # certified pytorch moment
         frame = rgb2gray(frame).unsqueeze(0)
+        #frame = add_noise(rgb2gray(frame),device).unsqueeze(0)
         #print(frame.shape)
         Y_train_hat = pizzair_model(frame)
+        frame_bw = np.squeeze(frame.cpu().numpy())
+        #print(frame_bw)
+        cv2.imshow('frame', frame_bw) 
         #print("\r", end="")
         mag = abs(Y_train_hat[0].item())
         dir = np.argmax([Y_train_hat[1].tolist()[0][0],Y_train_hat[1].tolist()[0][2]])
-        safe = np.argmax(Y_train_hat[2].tolist()[0])
+        #safe = np.argmax(Y_train_hat[2].tolist()[0])
+        safe = F.softmax(torch.tensor(Y_train_hat[2].tolist()[0]))
         print_string = ''
 
         ### Display Output Section ###
@@ -114,6 +114,7 @@ with torch.no_grad():
             #print(time.time()-last_time)
             frame_counter += 1
         ### Drone Control Section ###
+        safe = np.argmax(Y_train_hat[2].tolist()[0])
         if do_control:
             if not hover:
                 if safe==0:

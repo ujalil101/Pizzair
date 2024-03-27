@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import math
 from decord import VideoLoader
 from decord import cpu, gpu
-from pizzairnet import rgb2gray
+from pizzairnet import rgb2gray,add_noise
 
 class ImitationDataLoader():
     # Imitation learning data loader. Basically just a wrapper for
@@ -20,7 +20,8 @@ class ImitationDataLoader():
                  video_directory = '../../data/sim_video_clips/',
                  label_directory = '../../data/sim_labels/',
                  #video_size = (720,1280)):
-                 video_size = (216,384)):
+                 video_size = (216,384),
+                 image_aug = True):
         decord.bridge.set_bridge('torch')
         video_files = []
         for name in video_name_list:
@@ -29,6 +30,8 @@ class ImitationDataLoader():
         self.vl.reset()
         self.batch_size = batch_size
         self.video_size = video_size
+        self.image_aug = image_aug
+        self.device ='cpu'
         # notes on shuffling above - 
         """
         shuffle = -1  # smart shuffle mode, based on video properties, (not implemented yet)
@@ -66,6 +69,9 @@ class ImitationDataLoader():
                 safety_batch.append(self.safety_labels[index[0]][index[1]])
             # converts video to greyscale
             video_batch = rgb2gray(video_batch)
+            # handles image augmentation
+            if self.image_aug:
+                video_batch = add_noise(video_batch,self.device)
             # puts the steering/safety stuff into right tensor size
             labels = torch.zeros((self.batch_size,3))
             labels[:,0] = torch.tensor(mag_batch)

@@ -125,10 +125,14 @@ def rgb2gray(rgb):
         r, g, b = rgb[:,:,:,0], rgb[:,:,:,1], rgb[:,:,:,2] #[batch,row,height,channel]
         # normalizes independently
         #print(type(r))
-        r = F.normalize(r.float(), dim=(1, 2))
-        g = F.normalize(g.float(), dim=(1, 2))
-        b = F.normalize(b.float(), dim=(1, 2))
+        #r = F.normalize(r.float(), dim=(1, 2))
+        #g = F.normalize(g.float(), dim=(1, 2))
+        #b = F.normalize(b.float(), dim=(1, 2))
         # adds and roughly weights each to human vision
         gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-        return gray
-        #return gray/256
+        #return gray
+        return gray/256
+def add_noise(gray_image,device):
+    #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    gray_image = gray_image*(torch.rand(1).to(device)/3 +0.85) + (torch.rand(gray_image.shape).to(device)-0.5)/5
+    return gray_image
