@@ -22,7 +22,7 @@ def initialize_jetson_to_dynamo():
     return dynamodb
 
 
-def insert_data(dynamodb, image_url, gps_coordinates, accelerometer_info, control_info):
+def insert_data(dynamodb, image_url, gps_coordinates, accelerometer_info, control_info,verbose = False):
     try:
         item = {
             'Retrieve': {'S': str(time.time())},  
@@ -38,7 +38,8 @@ def insert_data(dynamodb, image_url, gps_coordinates, accelerometer_info, contro
             TableName=table_name,
             Item=item
         )
-        print("Data inserted into DynamoDB:", response)
+        if verbose:
+            print("Data inserted into DynamoDB:", response)
     except Exception as e:
         print("Error inserting data into DynamoDB:", e)
 
