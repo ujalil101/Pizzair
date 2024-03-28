@@ -31,10 +31,10 @@
                 <p>Direction: {{ data[0]['Control']['M']['direction']['S'] }}</p>
             {% endif %}
             {% if 'mag' in data[0]['Control']['M'] %}
-                <p>Magnitude: {{ data[0]['Control']['M']['mag']['N'] }}</p>
+                <p>Magnitude: {{ data[0]['Control']['M']['mag']['S'] }}</p>
             {% endif %}
             {% if 'Safety' in data[0]['Control']['M'] %}
-                <p>Safety: {{ data[0]['Control']['M']['Safety']['N'] }}</p>
+                <p>Safety: {{ data[0]['Control']['M']['Safety']['S'] }}</p>
             {% endif %}
         {% endif %}
         {% else %}
