@@ -67,15 +67,19 @@ ware_goal_lat = 47.64153078517516
 ware_goal_long = -122.14126947945815
 farm_goal_lat =  47.64255048712882
 farm_goal_long = -122.14138240085241
-goal_tolerance = 2.920005174392924e-05
+goal_tolerance = 8e-05
 # sets the goal lat and long
-goal_lat,goal_long = farm_goal_lat,farm_goal_long
-#goal_lat,goal_long = ware_goal_lat,ware_goal_long
+#goal_lat,goal_long = farm_goal_lat,farm_goal_long
+goal_lat,goal_long = ware_goal_lat,ware_goal_long
 
 ### ML initialization Initialization ### 
 # various parameters and whatnot
-max_speed = 5
+max_speed = 10
+safety_speed_ratio = 1/8
 do_control = True # Determines if actual drone commands are sent. Set to FALSE for code testing. 
+do_navigation = True # Determins if the drone tries to reach a destination. Set ot FALSE for "wandering"
+command_interval_safe = 1/10# How many seconds each command is told to happen
+command_interval_danger = 1/5 # how many seconds unsafe/avoidance commands are told to happen
 
 # loads machine learning stuff
 print('ML initializing...')
@@ -95,7 +99,7 @@ client.enableApiControl(True)
 
 # starts the drone at nice location
 position = airsim.Vector3r(-45 , -4, 0)
-heading = airsim.utils.to_quaternion(0, 0, -44.8)
+heading = airsim.utils.to_quaternion(0, 0, -42.8)
 pose = airsim.Pose(position, heading)
 client.simSetVehiclePose(pose, True)
 
@@ -110,8 +114,6 @@ client.takeoffAsync().join()
 start_time = time.time()
 ## begins flight loop
 continue_flight = True
-command_interval = 1/10
-flight_time = 10
 with torch.no_grad():
     # stuff to handle showing framerate
     frame_counter = 0
@@ -145,7 +147,7 @@ with torch.no_grad():
         elif dir == 1:
             dir_print = 'R'
         else:
-            dir_print = 'R'
+            dir_print = 'C'
         # adds network output
         print_string += ('Mag: ' + str(round(mag,5)) + ' Direction: '+ str(dir_print) + ' safe: ' + str(safe))
         # adds operation speed
@@ -166,27 +168,55 @@ with torch.no_grad():
                 # this inner section is where the real control is going on
                 if safe==0:
                     # safe - go forward
-                    client.moveByVelocityBodyFrameAsync(vx=max_speed,vy=0,vz=0,duration=command_interval).join()
-                    # gets angle between x-axis and goal assuming drone is at origin
-                    gps_data = client.getGpsData()
-                    lat = gps_data.gnss.geo_point.latitude
-                    long = gps_data.gnss.geo_point.longitude
-                    goal_angle = np.arctan2((goal_long-long),(goal_lat-lat)) # this should be in radians
-
+                    if not do_navigation:
+                        client.moveByVelocityBodyFrameAsync(vx=max_speed,vy=0,vz=0,duration=command_interval_safe).join()
+                    else:
+                        # gets angle between x-axis and goal assuming drone is at origin
+                        gps_data = client.getGpsData()
+                        lat = gps_data.gnss.geo_point.latitude
+                        long = gps_data.gnss.geo_point.longitude
+                        goal_angle = np.arctan2((goal_long-long),(goal_lat-lat))% ((2)*np.pi) # this should be in radians
+                        # WARNING: war crime gets commmitted in next couple lines
+                        imu_data = client.getImuData()
+                        ori = imu_data.orientation
+                        _,_,yaw = euler_from_quaternion(ori.x_val,ori.y_val,ori.z_val,ori.w_val)
+                        ego_angle = (yaw % ((2)*np.pi)) # converts "airsim radians" to "normal people radians"
+                        angle_diff = (goal_angle-ego_angle) % ((2)*np.pi)
+                        #print('Angle Diff:',angle_diff)
+                        if angle_diff < np.pi: # go left
+                            dir = 1
+                        else: # go right
+                            angle_diff = (-angle_diff) % ((2)*np.pi) # makes upcoming thing agonstic which is nice
+                            dir = -1
+                        if angle_diff < np.pi/2: # in 180-FOV "cone": turn proportional to mag
+                            mag = angle_diff/(np.pi/2)
+                        else: # outside FOV cone/"behind" drone - turn as fast as possible, which we use normalized 1 for
+                            mag = 1
+                        client.rotateByYawRateAsync(yaw_rate=mag*dir*90,duration=command_interval_safe).join()
+                        client.moveByVelocityBodyFrameAsync(vx=max_speed,vy=0,vz=0,duration=command_interval_safe).join()
 
                 else:
                     # unsafe - go half speed, avoid things
                     if dir == 1: # go right
-                        client.rotateByYawRateAsync(yaw_rate=mag*90,duration=command_interval).join()
-                        client.moveByVelocityBodyFrameAsync(vx=max_speed/2,vy=0,vz=0,duration=command_interval).join()
+                        client.rotateByYawRateAsync(yaw_rate=mag*90,duration=command_interval_danger).join()
+                        client.moveByVelocityBodyFrameAsync(vx=max_speed*safety_speed_ratio,vy=0,vz=0,duration=command_interval_danger).join()
                     elif dir == 0: # go left
-                        client.rotateByYawRateAsync(yaw_rate=-mag*90,duration=command_interval).join()
-                        client.moveByVelocityBodyFrameAsync(vx=max_speed/2,vy=0,vz=0,duration=command_interval).join()
+                        client.rotateByYawRateAsync(yaw_rate=-mag*90,duration=command_interval_danger).join()
+                        client.moveByVelocityBodyFrameAsync(vx=max_speed*safety_speed_ratio,vy=0,vz=0,duration=command_interval_danger).join()
                     else: # go straight
-                        client.moveByVelocityBodyFrameAsync(vx=max_speed/2,vy=0,vz=0,duration=command_interval).join()
+                        client.moveByVelocityBodyFrameAsync(vx=max_speed*safety_speed_ratio,vy=0,vz=0,duration=command_interval_danger).join()
             else:
-                client.moveByVelocityBodyFrameAsync(vx=0,vy=0,vz=0,duration=command_interval).join()
+                client.moveByVelocityBodyFrameAsync(vx=0,vy=0,vz=0,duration=command_interval_danger).join()
 
+        ### Checking if Destination is Reached ###
+        gps_data = client.getGpsData()
+        latitude = gps_data.gnss.geo_point.latitude
+        longitude = gps_data.gnss.geo_point.longitude
+        if np.sqrt((goal_lat-latitude)**2 + (goal_long-longitude)**2) <= goal_tolerance:
+            print('Goal reached. Landing ... ')
+            time.sleep(1)
+            client.landAsync(timeout_sec=20).join()
+            continue_flight = False
         ### DynaDB Data Uploading ###
         ## grabs relevant info from AirSim specific things
         if connect_to_db and abs(time.time()-db_last_upload_time) >= upload_frequency:
@@ -214,13 +244,12 @@ with torch.no_grad():
         # desired button of your choice 
         pressedKey = cv2.waitKey(1) & 0xFF
         if pressedKey == ord('q'):
+            print('Flight terminated. Landing ... ')
+            client.landAsync(timeout_sec=0.5).join()
             break
         elif pressedKey == ord('h'):
             hover = not hover
         
-## ends flight. lands.
-print('Landing ... ')
-client.landAsync(timeout_sec=0.5).join()
 
 # end of flight. disables program.
 client.reset()
