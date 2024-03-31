@@ -1,8 +1,10 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for,session
 from SendingData.geocoding import geocode_address
 from dotenv import load_dotenv
 from SendingData.geo_data_to_dynamodb import insert_into_dynamodb
 from ReceivingData.dynamo_to_app import retrieve_data  
+from SendingData.mapping_UI import Retrieve_Coordinates, fetch_from_dynamodb
+
 import boto3
 import os
 load_dotenv
@@ -10,6 +12,7 @@ app = Flask(__name__)
 
 # api
 google_maps_api_key = os.getenv("API_Key")
+app.secret_key = os.environ.get('Secret_Key') 
 
 
 @app.route('/')
@@ -35,15 +38,30 @@ def submit_form():
     return redirect(url_for('display_data'))
 
 # This route will render the display_data.html page
+
+
 @app.route('/display_data')
 def display_data():
-
-    # fetch data 
+    # fetch data
     data = retrieve_data()
-    if data:
-        return render_template('display_data.html', data=data)
-    else:
-        return "No data available"  
+
+    # fetch coordinates
+    dynamodb = Retrieve_Coordinates() 
+    location = fetch_from_dynamodb(dynamodb)
+    starting_lat = location[0]
+    starting_lon = location[1]
+    dest_lat = location[2]
+    dest_lon = location[3]
+
+    # pass data and API key
+    return render_template('display_data.html', 
+                           data=data, 
+                           starting_lat=starting_lat, 
+                           starting_lon=starting_lon,
+                           dest_lat=dest_lat,
+                           dest_lon=dest_lon,
+                           api_key=os.getenv('API_Key'))
+    
 
 
 

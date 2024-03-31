@@ -5,41 +5,112 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Display Data</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}"></script>
+    <script>
+        function initMap() {
+            var startingLat = parseFloat("{{ starting_lat }}");
+            var startingLon = parseFloat("{{ starting_lon }}");
+            var destLat = parseFloat("{{ dest_lat }}");
+            var destLon = parseFloat("{{ dest_lon }}");
+            
+            var map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: startingLat, lng: startingLon },
+                zoom: 10
+            });
+
+            var startingMarker = new google.maps.Marker({
+                position: { lat: startingLat, lng: startingLon },
+                map: map,
+                title: 'Starting Point'
+            });
+
+            var destMarker = new google.maps.Marker({
+                position: { lat: destLat, lng: destLon },
+                map: map,
+                title: 'Destination Point'
+            });
+        }
+    </script>
+    
 </head>
 <body>
-    <h1>Displaying Data from Jetson Nano</h1>
-    <div>
-        {% if data %}
-        <h2>Image</h2>
-        <p>{{ data[0]['Image']['S'] }}</p>
-        
-        <h2>GPS coordinates</h2>
-        <p>Latitude: {{ data[0]['GPS']['M']['latitude']['N'] }}</p>
-        <p>Longitude: {{ data[0]['GPS']['M']['longitude']['N'] }}</p>
-        
-        <h2>Accelerometer info</h2>
-        <p>X: {{ data[0]['Accelerometer']['M']['x']['N'] }}</p>
-        <p>Y: {{ data[0]['Accelerometer']['M']['y']['N'] }}</p>
-        <p>Z: {{ data[0]['Accelerometer']['M']['z']['N'] }}</p>
-        
-        <h2>Control info</h2>
-        {% if 'Control' in data[0] and 'M' in data[0]['Control'] %}
-            {% if 'speed' in data[0]['Control']['M'] %}
-                <p>Speed: {{ data[0]['Control']['M']['speed']['N'] }}</p>
+    <div class="data-container">
+        <h1>Displaying Data from Jetson Nano</h1>
+        <div>
+            {% if data %}
+            <table border="1" cellpadding="5">
+                <tr>
+                    <th colspan="2">Image</th>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <img src="{{ data[0]['Image']['S'] }}" alt="Image" style="max-width: 100%; max-height: 200px; width: auto; height: auto; object-fit: contain;">
+                    </td>
+                </tr>
+                <tr>
+                    <th colspan="2">GPS Coordinates</th>
+                </tr>
+                <tr>
+                    <td>Latitude:</td>
+                    <td>{{ data[0]['GPS']['M']['latitude']['N'] }}</td>
+                </tr>
+                <tr>
+                    <td>Longitude:</td>
+                    <td>{{ data[0]['GPS']['M']['longitude']['N'] }}</td>
+                </tr>
+                <tr>
+                    <th colspan="2">Accelerometer Info</th>
+                </tr>
+                <tr>
+                    <td>X:</td>
+                    <td>{{ data[0]['Accelerometer']['M']['x']['N'] }}</td>
+                </tr>
+                <tr>
+                    <td>Y:</td>
+                    <td>{{ data[0]['Accelerometer']['M']['y']['N'] }}</td>
+                </tr>
+                <tr>
+                    <td>Z:</td>
+                    <td>{{ data[0]['Accelerometer']['M']['z']['N'] }}</td>
+                </tr>
+                <tr>
+                    <th colspan="2">Control Info</th>
+                </tr>
+                {% if 'Control' in data[0] and 'M' in data[0]['Control'] %}
+                {% if 'speed' in data[0]['Control']['M'] %}
+                <tr>
+                    <td>Speed:</td>
+                    <td>{{ data[0]['Control']['M']['speed']['N'] }}</td>
+                </tr>
+                {% endif %}
+                {% if 'direction' in data[0]['Control']['M'] %}
+                <tr>
+                    <td>Direction:</td>
+                    <td>{{ data[0]['Control']['M']['direction']['S'] }}</td>
+                </tr>
+                {% endif %}
+                {% if 'mag' in data[0]['Control']['M'] %}
+                <tr>
+                    <td>Magnitude:</td>
+                    <td>{{ data[0]['Control']['M']['mag']['S'] }}</td>
+                </tr>
+                {% endif %}
+                {% if 'Safety' in data[0]['Control']['M'] %}
+                <tr>
+                    <td>Safety:</td>
+                    <td>{{ data[0]['Control']['M']['Safety']['S'] }}</td>
+                </tr>
+                {% endif %}
+                {% endif %}
+            </table>
+            {% else %}
+            <p>No data available</p>
             {% endif %}
-            {% if 'direction' in data[0]['Control']['M'] %}
-                <p>Direction: {{ data[0]['Control']['M']['direction']['S'] }}</p>
-            {% endif %}
-            {% if 'mag' in data[0]['Control']['M'] %}
-                <p>Magnitude: {{ data[0]['Control']['M']['mag']['S'] }}</p>
-            {% endif %}
-            {% if 'Safety' in data[0]['Control']['M'] %}
-                <p>Safety: {{ data[0]['Control']['M']['Safety']['S'] }}</p>
-            {% endif %}
-        {% endif %}
-        {% else %}
-        <p>No data available</p>
-        {% endif %}
+        </div>
     </div>
+    <div id="map"></div>
+    <script>
+        initMap();
+    </script>
 </body>
 </html>

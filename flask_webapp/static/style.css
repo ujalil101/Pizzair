@@ -48,3 +48,10 @@ body {
     background-color: #CE0000;
     color: #DBA24A;
 }
+.data-container {
+    width: 45%;
+}
+#map {
+    width: 45%;
+    height: 400px; /* Adjust height as needed */
+}
