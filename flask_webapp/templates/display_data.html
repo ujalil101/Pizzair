@@ -5,32 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Display Data</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}"></script>
-    <script>
-        function initMap() {
-            var startingLat = parseFloat("{{ starting_lat }}");
-            var startingLon = parseFloat("{{ starting_lon }}");
-            var destLat = parseFloat("{{ dest_lat }}");
-            var destLon = parseFloat("{{ dest_lon }}");
-            
-            var map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: startingLat, lng: startingLon },
-                zoom: 10
-            });
-
-            var startingMarker = new google.maps.Marker({
-                position: { lat: startingLat, lng: startingLon },
-                map: map,
-                title: 'Starting Point'
-            });
-
-            var destMarker = new google.maps.Marker({
-                position: { lat: destLat, lng: destLon },
-                map: map,
-                title: 'Destination Point'
-            });
-        }
-    </script>
+    
     
 </head>
 <body>
@@ -108,9 +83,38 @@
             {% endif %}
         </div>
     </div>
+
+     <!-- Button to stop/start flight -->
+     <button id="stopFlightButton" onclick="toggleFlight()">Stop Flight</button>
+
     <div id="map"></div>
     <script>
-        initMap();
+        function toggleFlight() {
+            var button = document.getElementById("stopFlightButton");
+            var newDeliveryStatus = button.textContent === "Stop Flight" ? false : true; // delivery status
+            button.disabled = true; // disab;le button to prevent multiple clicks
+            fetch('/update_delivery_status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    deliveryStatus: newDeliveryStatus,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // change button text and re-enable button after a delay
+                setTimeout(function() {
+                    button.textContent = newDeliveryStatus ? "Stop Flight" : "Start Flight";
+                    button.disabled = false;
+                }, 2000); // adjust delay as needed
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.disabled = false; //  show error
+            });
+        }
     </script>
 </body>
 </html>
