@@ -51,7 +51,3 @@ body {
 .data-container {
     width: 45%;
 }
-#map {
-    width: 45%;
-    height: 400px; /* Adjust height as needed */
-}

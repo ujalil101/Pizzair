@@ -5,21 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Display Data</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    
-    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
     <div class="data-container">
         <h1>Displaying Data from Jetson Nano</h1>
         <div>
-            {% if data %}
             <table border="1" cellpadding="5">
                 <tr>
                     <th colspan="2">Image</th>
                 </tr>
                 <tr>
                     <td colspan="2">
-                        <img src="{{ data[0]['Image']['S'] }}" alt="Image" style="max-width: 100%; max-height: 200px; width: auto; height: auto; object-fit: contain;">
+                        <img id="image" src="" alt="Image" style="max-width: 100%; max-height: 200px; width: auto; height: auto; object-fit: contain;">
                     </td>
                 </tr>
                 <tr>
@@ -27,94 +25,96 @@
                 </tr>
                 <tr>
                     <td>Latitude:</td>
-                    <td>{{ data[0]['GPS']['M']['latitude']['N'] }}</td>
+                    <td id="latitude"></td>
                 </tr>
                 <tr>
                     <td>Longitude:</td>
-                    <td>{{ data[0]['GPS']['M']['longitude']['N'] }}</td>
+                    <td id="longitude"></td>
                 </tr>
                 <tr>
                     <th colspan="2">Accelerometer Info</th>
                 </tr>
                 <tr>
                     <td>X:</td>
-                    <td>{{ data[0]['Accelerometer']['M']['x']['N'] }}</td>
+                    <td id="accelerometer_x"></td>
                 </tr>
                 <tr>
                     <td>Y:</td>
-                    <td>{{ data[0]['Accelerometer']['M']['y']['N'] }}</td>
+                    <td id="accelerometer_y"></td>
                 </tr>
                 <tr>
                     <td>Z:</td>
-                    <td>{{ data[0]['Accelerometer']['M']['z']['N'] }}</td>
+                    <td id="accelerometer_z"></td>
                 </tr>
                 <tr>
                     <th colspan="2">Control Info</th>
                 </tr>
-                {% if 'Control' in data[0] and 'M' in data[0]['Control'] %}
-                {% if 'speed' in data[0]['Control']['M'] %}
                 <tr>
                     <td>Speed:</td>
-                    <td>{{ data[0]['Control']['M']['speed']['N'] }}</td>
+                    <td id="speed"></td>
                 </tr>
-                {% endif %}
-                {% if 'direction' in data[0]['Control']['M'] %}
                 <tr>
                     <td>Direction:</td>
-                    <td>{{ data[0]['Control']['M']['direction']['S'] }}</td>
+                    <td id="direction"></td>
                 </tr>
-                {% endif %}
-                {% if 'mag' in data[0]['Control']['M'] %}
                 <tr>
                     <td>Magnitude:</td>
-                    <td>{{ data[0]['Control']['M']['mag']['S'] }}</td>
+                    <td id="magnitude"></td>
                 </tr>
-                {% endif %}
-                {% if 'Safety' in data[0]['Control']['M'] %}
                 <tr>
                     <td>Safety:</td>
-                    <td>{{ data[0]['Control']['M']['Safety']['S'] }}</td>
+                    <td id="safety"></td>
                 </tr>
-                {% endif %}
-                {% endif %}
             </table>
-            {% else %}
-            <p>No data available</p>
-            {% endif %}
+            <p id="noDataMsg">No data available</p>
         </div>
     </div>
 
-     <!-- Button to stop/start flight -->
-     <button id="stopFlightButton" onclick="toggleFlight()">Stop Flight</button>
+    <!-- Button to stop/start flight -->
+    <button id="stopFlightButton" onclick="toggleFlight()">Stop Flight</button>
 
-    <div id="map"></div>
+    <div id="map" style="height: 400px;"></div>
+
+
     <script>
-        function toggleFlight() {
-            var button = document.getElementById("stopFlightButton");
-            var newDeliveryStatus = button.textContent === "Stop Flight" ? false : true; // delivery status
-            button.disabled = true; // disab;le button to prevent multiple clicks
-            fetch('/update_delivery_status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    deliveryStatus: newDeliveryStatus,
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                // change button text and re-enable button after a delay
-                setTimeout(function() {
-                    button.textContent = newDeliveryStatus ? "Stop Flight" : "Start Flight";
-                    button.disabled = false;
-                }, 2000); // adjust delay as needed
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                button.disabled = false; //  show error
-            });
+        // func to fetch data from server
+        function fetchData() {
+            fetch('/retrieve_data')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        document.getElementById('noDataMsg').style.display = 'none';
+                        document.getElementById('image').src = data[0]['Image']['S'];
+                        document.getElementById('latitude').textContent = data[0]['GPS']['M']['latitude']['N'];
+                        document.getElementById('longitude').textContent = data[0]['GPS']['M']['longitude']['N'];
+                        document.getElementById('accelerometer_x').textContent = data[0]['Accelerometer']['M']['x']['N'];
+                        document.getElementById('accelerometer_y').textContent = data[0]['Accelerometer']['M']['y']['N'];
+                        document.getElementById('accelerometer_z').textContent = data[0]['Accelerometer']['M']['z']['N'];
+                        document.getElementById('speed').textContent = data[0]['Control']['M']['mag']['S'];
+                        document.getElementById('direction').textContent = data[0]['Control']['M']['direction']['S'];
+                        document.getElementById('magnitude').textContent = data[0]['Control']['M']['mag']['S'];
+                        document.getElementById('safety').textContent = parseSafetyTensor(data[0]['Control']['M']['Safety']['S']);
+                        // extracting tensor 
+                        function parseSafetyTensor(safetyString) {
+                            
+                            var values = safetyString.match(/\d+\.\d+/g);
+                            if (values.length >= 2) {
+                                return  values[0] + ', ' + values[1];
+                            }
+                            return 'Safety data not available';
+                        }
+
+                    } else {
+                        document.getElementById('noDataMsg').style.display = 'block';
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
         }
+
+        // call fetchData initially and then set an interval to call it periodically
+        fetchData();
+        setInterval(fetchData, 5000); // fetch data every 5 seconds 
+        
     </script>
 </body>
 </html>
