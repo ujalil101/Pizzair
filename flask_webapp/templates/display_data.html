@@ -10,80 +10,106 @@
 <body>
     <div class="data-container">
         <h1>Displaying Data from Jetson Nano</h1>
-        <div>
-            <table border="1" cellpadding="5">
-                <tr>
-                    <th colspan="2">Image</th>
-                </tr>
-                <tr>
-                    <td colspan="2">
-                        <img id="image" src="" alt="Image" style="max-width: 100%; max-height: 200px; width: auto; height: auto; object-fit: contain;">
-                    </td>
-                </tr>
-                <tr>
-                    <th colspan="2">GPS Coordinates</th>
-                </tr>
-                <tr>
-                    <td>Latitude:</td>
-                    <td id="latitude"></td>
-                </tr>
-                <tr>
-                    <td>Longitude:</td>
-                    <td id="longitude"></td>
-                </tr>
-                <tr>
-                    <th colspan="2">Accelerometer Info</th>
-                </tr>
-                <tr>
-                    <td>X:</td>
-                    <td id="accelerometer_x"></td>
-                </tr>
-                <tr>
-                    <td>Y:</td>
-                    <td id="accelerometer_y"></td>
-                </tr>
-                <tr>
-                    <td>Z:</td>
-                    <td id="accelerometer_z"></td>
-                </tr>
-                <tr>
-                    <th colspan="2">Control Info</th>
-                </tr>
-                <tr>
-                    <td>Speed:</td>
-                    <td id="speed"></td>
-                </tr>
-                <tr>
-                    <td>Direction:</td>
-                    <td id="direction"></td>
-                </tr>
-                <tr>
-                    <td>Magnitude:</td>
-                    <td id="magnitude"></td>
-                </tr>
-                <tr>
-                    <td>Safety:</td>
-                    <td id="safety"></td>
-                </tr>
-            </table>
-            <p id="noDataMsg">No data available</p>
+        <div class="row">
+            <div class="column">
+                <table border="1" cellpadding="5">
+                    <tr>
+                        <th colspan="2">Image</th>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <img id="image" src="" alt="Image" style="max-width: 100%; max-height: 200px; width: auto; height: auto; object-fit: contain;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">GPS Coordinates</th>
+                    </tr>
+                    <tr>
+                        <td>Latitude:</td>
+                        <td id="latitude"></td>
+                    </tr>
+                    <tr>
+                        <td>Longitude:</td>
+                        <td id="longitude"></td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">Accelerometer Info</th>
+                    </tr>
+                    <tr>
+                        <td>X:</td>
+                        <td id="accelerometer_x"></td>
+                    </tr>
+                    <tr>
+                        <td>Y:</td>
+                        <td id="accelerometer_y"></td>
+                    </tr>
+                    <tr>
+                        <td>Z:</td>
+                        <td id="accelerometer_z"></td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">Control Info</th>
+                    </tr>
+                    <tr>
+                        <td>Speed:</td>
+                        <td id="speed"></td>
+                    </tr>
+                    <tr>
+                        <td>Direction:</td>
+                        <td id="direction"></td>
+                    </tr>
+                    <tr>
+                        <td>Magnitude:</td>
+                        <td id="magnitude"></td>
+                    </tr>
+                    <tr>
+                        <td>Safety:</td>
+                        <td id="safety"></td>
+                    </tr>
+                </table>
+            </div>
+        
+            <div class="column">
+                <div id="map" style="height: 400px; width: 400px;"></div>
+            </div>
+    </div>
+        <div class="row">
+            <button id="stopFlightButton" onclick="toggleFlight()">Stop Flight</button>
+        </div>
+              
         </div>
     </div>
 
-    <!-- Button to stop/start flight -->
-    <button id="stopFlightButton" onclick="toggleFlight()">Stop Flight</button>
+    
+    
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    <div id="map" style="height: 400px;"></div>
 
 
     <script>
+        var mapInitialized = false; // check for track map initialization
+
+        function initMap(latitude, longitude) {
+            if (!mapInitialized) { // check if map is not already initialized
+                var map = L.map('map').setView([latitude, longitude], 13);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+                L.marker([latitude, longitude]).addTo(map)
+                    .bindPopup('Location').openPopup();
+
+                mapInitialized = true; // Set flag to true after initialization
+            }
+        }
         // func to fetch data from server
         function fetchData() {
             fetch('/retrieve_data')
                 .then(response => response.json())
                 .then(data => {
                     if (data.length > 0) {
-                        document.getElementById('noDataMsg').style.display = 'none';
+                        
                         document.getElementById('image').src = data[0]['Image']['S'];
                         document.getElementById('latitude').textContent = data[0]['GPS']['M']['latitude']['N'];
                         document.getElementById('longitude').textContent = data[0]['GPS']['M']['longitude']['N'];
@@ -94,6 +120,9 @@
                         document.getElementById('direction').textContent = data[0]['Control']['M']['direction']['S'];
                         document.getElementById('magnitude').textContent = data[0]['Control']['M']['mag']['S'];
                         document.getElementById('safety').textContent = parseSafetyTensor(data[0]['Control']['M']['Safety']['S']);
+                        var latitude = parseFloat(data[0]['GPS']['M']['latitude']['N']);
+                        var longitude = parseFloat(data[0]['GPS']['M']['longitude']['N']);
+                        initMap(latitude, longitude);
                         // extracting tensor 
                         function parseSafetyTensor(safetyString) {
                             
