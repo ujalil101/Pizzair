@@ -5,112 +5,145 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Display Data</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}"></script>
-    <script>
-        function initMap() {
-            var startingLat = parseFloat("{{ starting_lat }}");
-            var startingLon = parseFloat("{{ starting_lon }}");
-            var destLat = parseFloat("{{ dest_lat }}");
-            var destLon = parseFloat("{{ dest_lon }}");
-            
-            var map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: startingLat, lng: startingLon },
-                zoom: 10
-            });
-
-            var startingMarker = new google.maps.Marker({
-                position: { lat: startingLat, lng: startingLon },
-                map: map,
-                title: 'Starting Point'
-            });
-
-            var destMarker = new google.maps.Marker({
-                position: { lat: destLat, lng: destLon },
-                map: map,
-                title: 'Destination Point'
-            });
-        }
-    </script>
-    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
     <div class="data-container">
         <h1>Displaying Data from Jetson Nano</h1>
-        <div>
-            {% if data %}
-            <table border="1" cellpadding="5">
-                <tr>
-                    <th colspan="2">Image</th>
-                </tr>
-                <tr>
-                    <td colspan="2">
-                        <img src="{{ data[0]['Image']['S'] }}" alt="Image" style="max-width: 100%; max-height: 200px; width: auto; height: auto; object-fit: contain;">
-                    </td>
-                </tr>
-                <tr>
-                    <th colspan="2">GPS Coordinates</th>
-                </tr>
-                <tr>
-                    <td>Latitude:</td>
-                    <td>{{ data[0]['GPS']['M']['latitude']['N'] }}</td>
-                </tr>
-                <tr>
-                    <td>Longitude:</td>
-                    <td>{{ data[0]['GPS']['M']['longitude']['N'] }}</td>
-                </tr>
-                <tr>
-                    <th colspan="2">Accelerometer Info</th>
-                </tr>
-                <tr>
-                    <td>X:</td>
-                    <td>{{ data[0]['Accelerometer']['M']['x']['N'] }}</td>
-                </tr>
-                <tr>
-                    <td>Y:</td>
-                    <td>{{ data[0]['Accelerometer']['M']['y']['N'] }}</td>
-                </tr>
-                <tr>
-                    <td>Z:</td>
-                    <td>{{ data[0]['Accelerometer']['M']['z']['N'] }}</td>
-                </tr>
-                <tr>
-                    <th colspan="2">Control Info</th>
-                </tr>
-                {% if 'Control' in data[0] and 'M' in data[0]['Control'] %}
-                {% if 'speed' in data[0]['Control']['M'] %}
-                <tr>
-                    <td>Speed:</td>
-                    <td>{{ data[0]['Control']['M']['speed']['N'] }}</td>
-                </tr>
-                {% endif %}
-                {% if 'direction' in data[0]['Control']['M'] %}
-                <tr>
-                    <td>Direction:</td>
-                    <td>{{ data[0]['Control']['M']['direction']['S'] }}</td>
-                </tr>
-                {% endif %}
-                {% if 'mag' in data[0]['Control']['M'] %}
-                <tr>
-                    <td>Magnitude:</td>
-                    <td>{{ data[0]['Control']['M']['mag']['S'] }}</td>
-                </tr>
-                {% endif %}
-                {% if 'Safety' in data[0]['Control']['M'] %}
-                <tr>
-                    <td>Safety:</td>
-                    <td>{{ data[0]['Control']['M']['Safety']['S'] }}</td>
-                </tr>
-                {% endif %}
-                {% endif %}
-            </table>
-            {% else %}
-            <p>No data available</p>
-            {% endif %}
+        <div class="row">
+            <div class="column">
+                <table border="1" cellpadding="5">
+                    <tr>
+                        <th colspan="2">Image</th>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <img id="image" src="" alt="Image" style="max-width: 100%; max-height: 200px; width: auto; height: auto; object-fit: contain;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">GPS Coordinates</th>
+                    </tr>
+                    <tr>
+                        <td>Latitude:</td>
+                        <td id="latitude"></td>
+                    </tr>
+                    <tr>
+                        <td>Longitude:</td>
+                        <td id="longitude"></td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">Accelerometer Info</th>
+                    </tr>
+                    <tr>
+                        <td>X:</td>
+                        <td id="accelerometer_x"></td>
+                    </tr>
+                    <tr>
+                        <td>Y:</td>
+                        <td id="accelerometer_y"></td>
+                    </tr>
+                    <tr>
+                        <td>Z:</td>
+                        <td id="accelerometer_z"></td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">Control Info</th>
+                    </tr>
+                    <tr>
+                        <td>Speed:</td>
+                        <td id="speed"></td>
+                    </tr>
+                    <tr>
+                        <td>Direction:</td>
+                        <td id="direction"></td>
+                    </tr>
+                    <tr>
+                        <td>Magnitude:</td>
+                        <td id="magnitude"></td>
+                    </tr>
+                    <tr>
+                        <td>Safety:</td>
+                        <td id="safety"></td>
+                    </tr>
+                </table>
+            </div>
+        
+            <div class="column">
+                <div id="map" style="height: 400px; width: 400px;"></div>
+            </div>
+    </div>
+        <div class="row">
+            <button id="stopFlightButton" onclick="toggleFlight()">Stop Flight</button>
+        </div>
+              
         </div>
     </div>
-    <div id="map"></div>
+
+    
+    
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+
+
     <script>
-        initMap();
+        var mapInitialized = false; // check for track map initialization
+
+        function initMap(latitude, longitude) {
+            if (!mapInitialized) { // check if map is not already initialized
+                var map = L.map('map').setView([latitude, longitude], 13);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+                L.marker([latitude, longitude]).addTo(map)
+                    .bindPopup('Location').openPopup();
+
+                mapInitialized = true; // Set flag to true after initialization
+            }
+        }
+        // func to fetch data from server
+        function fetchData() {
+            fetch('/retrieve_data')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        
+                        document.getElementById('image').src = data[0]['Image']['S'];
+                        document.getElementById('latitude').textContent = data[0]['GPS']['M']['latitude']['N'];
+                        document.getElementById('longitude').textContent = data[0]['GPS']['M']['longitude']['N'];
+                        document.getElementById('accelerometer_x').textContent = data[0]['Accelerometer']['M']['x']['N'];
+                        document.getElementById('accelerometer_y').textContent = data[0]['Accelerometer']['M']['y']['N'];
+                        document.getElementById('accelerometer_z').textContent = data[0]['Accelerometer']['M']['z']['N'];
+                        document.getElementById('speed').textContent = data[0]['Control']['M']['mag']['S'];
+                        document.getElementById('direction').textContent = data[0]['Control']['M']['direction']['S'];
+                        document.getElementById('magnitude').textContent = data[0]['Control']['M']['mag']['S'];
+                        document.getElementById('safety').textContent = parseSafetyTensor(data[0]['Control']['M']['Safety']['S']);
+                        var latitude = parseFloat(data[0]['GPS']['M']['latitude']['N']);
+                        var longitude = parseFloat(data[0]['GPS']['M']['longitude']['N']);
+                        initMap(latitude, longitude);
+                        // extracting tensor 
+                        function parseSafetyTensor(safetyString) {
+                            
+                            var values = safetyString.match(/\d+\.\d+/g);
+                            if (values.length >= 2) {
+                                return  values[0] + ', ' + values[1];
+                            }
+                            return 'Safety data not available';
+                        }
+
+                    } else {
+                        document.getElementById('noDataMsg').style.display = 'block';
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // call fetchData initially and then set an interval to call it periodically
+        fetchData();
+        setInterval(fetchData, 5000); // fetch data every 5 seconds 
+        
     </script>
 </body>
 </html>

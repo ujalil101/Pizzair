@@ -12,9 +12,6 @@
     <div id="pizzair">Pizzair</div>
 
     <div class="input-container">
-        <!-- Input Starting Point -->
-        <input type="text" id="startingPoint" name="startingPoint" placeholder="Street, City, State, Zip, Country">
-
         <!-- Input Destination -->
         <input type="text" id="destination" name="destination" placeholder="Street, City, State, Zip, Country">
 
@@ -24,10 +21,9 @@
 
     <script>
         function submitForm() {
-            var startingPoint = document.getElementById('startingPoint').value;
             var destination = document.getElementById('destination').value;
 
-            if (startingPoint && destination) {
+            if (destination) {
                 // Call Ahmet's geocoding script
                 fetch('/geocode', {
                     method: 'POST',
@@ -35,21 +31,20 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        startingPoint: startingPoint,
                         destination: destination,
                     }),
                 })
                 .then(response => response.json())
                 .then(data => {
                     console.log(data);
-                    // Redirect to the new HTML form
+                    // go to the new HTML form
                     window.location.href = "/display_data";
                 })
                 .catch(error => {
                     console.error('Error:', error);
                 });
             } else {
-                alert('Please enter both starting point and destination addresses.');
+                alert('Please enter the destination address.');
             }
         }
     </script>
