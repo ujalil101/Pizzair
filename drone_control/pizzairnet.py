@@ -68,7 +68,7 @@ class PizzairNet(nn.Module):
         # weighting parameters - gotta tune these manually
         alpha_mag = 0.5
         alpha_dir = 1
-        alpha_safe = 1
+        alpha_safe = 0.75
 
         # defines some loss functions
         mse = torch.nn.MSELoss()
@@ -89,7 +89,7 @@ class PizzairNet(nn.Module):
         safe_loss = safe_ce(safe_pred,safe_true)
 
         # adds and weights accordingly, including epsilon thing
-        epoch_null = 5
+        epoch_null = 10
         decay = 1/epoch_null
         ce_loss_multiplier = 1
         if regression_warmup:
@@ -136,3 +136,5 @@ def add_noise(gray_image,device):
     #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     gray_image = gray_image*(torch.rand(1).to(device)/3 +0.85) + (torch.rand(gray_image.shape).to(device)-0.5)/5
     return gray_image
+def flip_image(gray_image,device):
+    return torch.flip(gray_image,dims=[3]).to(device)
