@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import math
 from decord import VideoLoader
 from decord import cpu, gpu
-from pizzairnet import rgb2gray,add_noise
+from pizzairnet import rgb2gray,add_noise,flip_image
 
 class ImitationDataLoader():
     # Imitation learning data loader. Basically just a wrapper for
@@ -31,6 +31,8 @@ class ImitationDataLoader():
         self.batch_size = batch_size
         self.video_size = video_size
         self.image_aug = image_aug
+        self.noise_aug = True
+        self.flip_aug = True
         self.device ='cpu'
         # notes on shuffling above - 
         """
@@ -59,25 +61,39 @@ class ImitationDataLoader():
     
     def __next__(self):
         #try:
+            # this next line is for image augmentation stuff
+            flip_coin = np.random.rand() > 0.5
+            # data loading proper
             video_batch, indices = self.vl.__next__()
             mag_batch = []
             dir_batch = []
             safety_batch = []
             for index in indices:
                 mag_batch.append(abs(self.steering_labels[index[0]][index[1]]))
-                dir_batch.append(np.sign(self.steering_labels[index[0]][index[1]])+1)
+                if flip_coin:
+                    dir_batch.append((np.sign(self.steering_labels[index[0]][index[1]])*-1)+1)
+                else:
+                    dir_batch.append(np.sign(self.steering_labels[index[0]][index[1]])+1)
                 safety_batch.append(self.safety_labels[index[0]][index[1]])
             # converts video to greyscale
             video_batch = rgb2gray(video_batch)
-            # handles image augmentation
-            if self.image_aug:
-                video_batch = add_noise(video_batch,self.device)
+
             # puts the steering/safety stuff into right tensor size
             labels = torch.zeros((self.batch_size,3))
             labels[:,0] = torch.tensor(mag_batch)
             labels[:,1] = torch.tensor(dir_batch)
             labels[:,2] = torch.tensor(safety_batch)
+
+
             video_batch = torch.reshape(video_batch,(self.batch_size,1,self.video_size[0],self.video_size[1]))
+
+            # handles image augmentation
+            if self.image_aug:
+                if self.noise_aug:
+                    video_batch = add_noise(video_batch,self.device)
+                if self.flip_aug:
+                    if flip_coin:
+                        video_batch = flip_image(video_batch,self.device)
             return video_batch,labels
         #except:
         #    raise StopIteration
