@@ -1,5 +1,11 @@
 # Pizzair - Drone Control Information
 
+## Installation
+
+See the requirements.txt file, which has instructions on making an appropriate Conda environment. For conda isntallation instructions, see [here](https://conda.io/projects/conda/en/latest/user-guide/install/index.html). 
+
+To install AirSim, follow the instructions [here](https://microsoft.github.io/AirSim/build_windows/). Note that you also need to install Unreal Engine - the AirSim docs have more specific instructions, but it essentially just requires installig the EpicGames launcher which will then let you install a specific version. To use the specific town we used for testing, see [here](https://www.unrealengine.com/marketplace/en-US/product/assetsville-town). You just need to import the town assets into the default AirSim project and it will work. 
+
 ## Control Overview
 Pizzair is powered by a combination of classical control algorithms for drone flight with an imitation-learning based algorithm for obstacle detection and avoidance. It is closest to the [Learning to Fly by Driving](https://ieeexplore.ieee.org/abstract/document/8264734) paper (from now on, the "DroNet Paper"). 
 
