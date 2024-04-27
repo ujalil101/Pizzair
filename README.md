@@ -2,7 +2,7 @@
 
 ## Note for Senior Design Staff
 
-Instead of one software Readme, we split it up into two readmes - one for the drone control software, and one for the web application. We put them as README.mds under the "drone_control" and "flask_webapp" folders respectively. 
+Instead of one software Readme, we split it up into two readmes - one for the drone control software, and one for the web application. We put them as README.mds under the "drone_control" and "flask_webapp" folders respectively. The HW Readme is in the HW folder. 
 
 ## Project Overview
 Pizzair is a cutting-edge pizza delivery system that uses drones to deliver pizzas to customers. This repository contains the code for the Pizzair mobile app, which allows customers to place orders and communicate with the pizza delivery drones.
