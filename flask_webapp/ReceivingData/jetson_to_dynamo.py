@@ -22,12 +22,13 @@ def initialize_jetson_to_dynamo():
     return dynamodb
 
 
-def insert_data(dynamodb, image_url, gps_coordinates, accelerometer_info, control_info,verbose = False):
+def insert_data(dynamodb, image_url, gps_coordinates,start_gps,accelerometer_info, control_info,verbose = False):
     try:
         item = {
             'Retrieve': {'S': str(time.time())},  
             'Image': {'S': image_url},
             'GPS': {'M': gps_coordinates},
+            'Start_GPS': {'M': start_gps},
             'Accelerometer': {'M': accelerometer_info},
             'Control': {'M': {key: {'S': str(value)} for key, value in control_info.items()}}
         }

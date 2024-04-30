@@ -270,11 +270,11 @@ def dynadb_download(connect_to_db):
 print('Starting...')
 
 ### DynaDB Initialization ###
-connect_to_db = False # Initializes DynaDB connection
+connect_to_db = True # Initializes DynaDB connection
 if connect_to_db:
     dynamodb = initialize_jetson_to_dynamo()
 db_last_upload_time = 0 # for less frequent uploading to DynaDB
-upload_frequency = 5 # how many seconds should go by between coordinate uploads 
+upload_frequency = 0.1 # how many seconds should go by between coordinate uploads 
 
 # Grabs initial coordinate data from the DynaDB server. For now, just prints it out.
 
@@ -292,8 +292,8 @@ test_goal_long =  -122.14109613885682
 goal_tolerance = 8e-05
 
 # sets the goal lat and long
-#goal_lat,goal_long = farm_goal_lat,farm_goal_long
-goal_lat,goal_long = test_goal_lat,test_goal_long
+goal_lat,goal_long = farm_goal_lat,farm_goal_long
+#goal_lat,goal_long = test_goal_lat,test_goal_long
 
 ### ML initialization Initialization ### 
 # various parameters and whatnot
