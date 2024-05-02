@@ -2,7 +2,8 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 from dotenv import load_dotenv
 from SendingData.geocoding import geocode_address
 from SendingData.geo_data_to_dynamodb import insert_into_dynamodb, update_delivery_status
-from ReceivingData.dynamo_to_app import retrieve_data  
+from SendingData.dynamodb_to_jetson import fetch_coordinates_for_mapping
+from ReceivingData.dynamo_to_app import retrieve_data
 
 import os
 
@@ -19,10 +20,20 @@ def retrieve_data_route():
     try:
         # Fetch data from DynamoDB
         data = retrieve_data()
-        
         return jsonify(data)
     except Exception as e:
         return jsonify({'error': str(e)})
+
+# route to fetch coordinates for mapping
+@app.route('/fetch_coordinates')
+def fetch_coordinates():
+    try:
+        # Fetch coordinates from DynamoDB
+        coordinates = fetch_coordinates_for_mapping()
+        return jsonify(coordinates)
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
 
 # route to render the index.html page
 @app.route('/')
@@ -33,9 +44,11 @@ def index():
 @app.route('/geocode', methods=['POST'])
 def geocode():
     data = request.get_json()
+    start_coordinates = geocode_address(google_maps_api_key, data['start'])
     destination_coordinates = geocode_address(google_maps_api_key, data['destination'])
-    # update DynamoDB with delivery status
-    insert_into_dynamodb(data['destination'], destination_coordinates[0], destination_coordinates[1], True)
+    
+    # update DynamoDB with start and destination coordinates and delivery status
+    insert_into_dynamodb(data['start'], start_coordinates[0], start_coordinates[1], data['destination'], destination_coordinates[0], destination_coordinates[1], True)
 
     return jsonify({'destination': destination_coordinates})
 
@@ -57,8 +70,8 @@ def display_data():
 @app.route('/update_delivery_status', methods=['POST'])
 def update_delivery_status_route():
     data = request.get_json()
-    delivery_status = data.get('deliveryStatus')  # get the new delivery status from the request
-    # update delivery status in Coordinates table
+    delivery_status = data.get('deliveryStatus')  # get the new delivery status from request
+    # Update delivery status in Coordinates table
     update_delivery_status(delivery_status)
     return jsonify({'success': True})
 

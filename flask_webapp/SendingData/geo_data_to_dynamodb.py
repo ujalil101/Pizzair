@@ -16,19 +16,25 @@ session = boto3.Session(
 )
 dynamodb = session.client('dynamodb')
 
-
-def insert_into_dynamodb(destination, destination_latitude, destination_longitude, delivery_boolean):
+def insert_into_dynamodb(start, start_latitude, start_longitude, destination, destination_latitude, destination_longitude, delivery_boolean):
     try:
         table_name = 'Coordinates'
         response = dynamodb.update_item(
             TableName=table_name,
             Key={
-                'user_loc': {'S': 'Admin'}  # use  same key value to ensure one item
+                'user_loc': {'S': 'Admin'}  # use the same key value to ensure one item
             },
-            UpdateExpression='SET DestinationLatitude = :lat, DestinationLongitude = :lon, Deliver = :deliv',
+            UpdateExpression='SET #start_alias = :start, StartLatitude = :start_lat, StartLongitude = :start_lon, Destination = :dest, DestinationLatitude = :dest_lat, DestinationLongitude = :dest_lon, Deliver = :deliv',
+            ExpressionAttributeNames={
+                '#start_alias': 'Start'
+            },
             ExpressionAttributeValues={
-                ':lat': {'S': str(destination_latitude)},
-                ':lon': {'S': str(destination_longitude)},
+                ':start': {'S': start},
+                ':start_lat': {'S': str(start_latitude)},
+                ':start_lon': {'S': str(start_longitude)},
+                ':dest': {'S': destination},
+                ':dest_lat': {'S': str(destination_latitude)},
+                ':dest_lon': {'S': str(destination_longitude)},
                 ':deliv': {'BOOL': delivery_boolean}
             },
             ReturnValues='ALL_NEW'  # return updated item after the update
@@ -37,6 +43,7 @@ def insert_into_dynamodb(destination, destination_latitude, destination_longitud
 
     except Exception as e:
         print("Error updating data in DynamoDB:", e)
+
 
 
 def update_delivery_status(delivery_status):
@@ -56,3 +63,4 @@ def update_delivery_status(delivery_status):
 
     except Exception as e:
         print("Error updating delivery status in DynamoDB:", e)
+

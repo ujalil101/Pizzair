@@ -22,7 +22,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <th colspan="2">GPS Coordinates</th>
+                        <th colspan="2">Current GPS Coordinates</th>
                     </tr>
                     <tr>
                         <td>Latitude:</td>
@@ -39,7 +39,7 @@
                         <td>X:</td>
                         <td id="accelerometer_x"></td>
                     </tr>
-                    <tr>
+                    <tr> 
                         <td>Y:</td>
                         <td id="accelerometer_y"></td>
                     </tr>
@@ -72,36 +72,81 @@
             <div class="column">
                 <div id="map" style="height: 400px; width: 400px;"></div>
             </div>
-    </div>
+        </div>
         <div class="row">
             <button id="stopFlightButton" onclick="toggleFlight()">Stop Flight</button>
         </div>
-              
-        </div>
     </div>
-
-    
     
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-
 
     <script>
         var mapInitialized = false; // check for track map initialization
 
-        function initMap(latitude, longitude) {
+        function initMap(startLatitude, startLongitude, destinationLatitude, destinationLongitude) {
             if (!mapInitialized) { // check if map is not already initialized
-                var map = L.map('map').setView([latitude, longitude], 13);
+                var map = L.map('map').setView([destinationLatitude, destinationLongitude], 13);
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map);
 
-                L.marker([latitude, longitude]).addTo(map)
-                    .bindPopup('Location').openPopup();
+                // Add markers for start and destination
+                L.marker([startLatitude, startLongitude]).addTo(map).bindPopup('Start Location');
+                L.marker([destinationLatitude, destinationLongitude]).addTo(map).bindPopup('Destination Location');
 
                 mapInitialized = true; // Set flag to true after initialization
             }
+        }
+
+        // stop flight button 
+        function toggleFlight() {
+            var button = document.getElementById("stopFlightButton");
+            var newDeliveryStatus = button.textContent === "Stop Flight" ? false : true; // delivery status
+            button.disabled = true; // disable button to prevent multiple clicks
+            fetch('/update_delivery_status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    deliveryStatus: newDeliveryStatus,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // change button text and re-enable button after a delay
+                setTimeout(function() {
+                    button.textContent = newDeliveryStatus ? "Stop Flight" : "Start Flight";
+                    button.disabled = false;
+                }, 2000); // adjust delay as needed
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.disabled = false; // show error
+            });
+        }
+
+        // function to fetch data from server and initialize map
+        function fetchDataAndInitMap() {
+            fetch('/fetch_coordinates')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        document.getElementById('latitude').textContent = data[0]['StartLatitude']['S'];
+                        document.getElementById('longitude').textContent = data[0]['StartLongitude']['S'];
+
+                        // Call initMap with start and destination coordinates
+                        var startLatitude = parseFloat(data[0]['StartLatitude']['S']);
+                        var startLongitude = parseFloat(data[0]['StartLongitude']['S']);
+                        var destinationLatitude = parseFloat(data[0]['DestinationLatitude']['S']);
+                        var destinationLongitude = parseFloat(data[0]['DestinationLongitude']['S']);
+                        initMap(startLatitude, startLongitude, destinationLatitude, destinationLongitude);
+                    } else {
+                        console.error('No coordinates data found.');
+                    }
+                })
+                .catch(error => console.error('Error fetching coordinates:', error));
         }
         // func to fetch data from server
         function fetchData() {
@@ -110,20 +155,19 @@
                 .then(data => {
                     if (data.length > 0) {
                         
-                        document.getElementById('image').src = data[0]['Image']['S'];
-                        document.getElementById('latitude').textContent = data[0]['GPS']['M']['latitude']['N'];
-                        document.getElementById('longitude').textContent = data[0]['GPS']['M']['longitude']['N'];
-                        document.getElementById('accelerometer_x').textContent = data[0]['Accelerometer']['M']['x']['N'];
-                        document.getElementById('accelerometer_y').textContent = data[0]['Accelerometer']['M']['y']['N'];
-                        document.getElementById('accelerometer_z').textContent = data[0]['Accelerometer']['M']['z']['N'];
-                        document.getElementById('speed').textContent = data[0]['Control']['M']['mag']['S'];
-                        document.getElementById('direction').textContent = data[0]['Control']['M']['direction']['S'];
-                        document.getElementById('magnitude').textContent = data[0]['Control']['M']['mag']['S'];
-                        document.getElementById('safety').textContent = parseSafetyTensor(data[0]['Control']['M']['Safety']['S']);
-                        var latitude = parseFloat(data[0]['GPS']['M']['latitude']['N']);
-                        var longitude = parseFloat(data[0]['GPS']['M']['longitude']['N']);
-                        initMap(latitude, longitude);
-                        // extracting tensor 
+                        const latestData = data[0];
+                        
+                        // update your HTML elements with the latest data
+                        document.getElementById('image').src = latestData['Image']['S'];
+                        document.getElementById('latitude').textContent = latestData['GPS']['M']['latitude']['N'];
+                        document.getElementById('longitude').textContent = latestData['GPS']['M']['longitude']['N'];
+                        document.getElementById('accelerometer_x').textContent = latestData['Accelerometer']['M']['x']['N'];
+                        document.getElementById('accelerometer_y').textContent = latestData['Accelerometer']['M']['y']['N'];
+                        document.getElementById('accelerometer_z').textContent = latestData['Accelerometer']['M']['z']['N'];
+                        document.getElementById('speed').textContent = latestData['Control']['M']['mag']['S'];
+                        document.getElementById('direction').textContent = latestData['Control']['M']['direction']['S'];
+                        document.getElementById('magnitude').textContent = latestData['Control']['M']['mag']['S'];
+                        document.getElementById('safety').textContent = parseSafetyTensor(latestData['Control']['M']['Safety']['S']);
                         function parseSafetyTensor(safetyString) {
                             
                             var values = safetyString.match(/\d+\.\d+/g);
@@ -132,18 +176,51 @@
                             }
                             return 'Safety data not available';
                         }
-
                     } else {
                         document.getElementById('noDataMsg').style.display = 'block';
                     }
                 })
                 .catch(error => console.error('Error fetching data:', error));
         }
+        // declare a global variable to hold the drone marker
+        var droneMarker;
+
+        // function to fetch data from server and update drone marker position on the map
+        function updateDroneMarker() {
+            fetch('/retrieve_data')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        const latestData = data[0];
+                        const latitude = parseFloat(latestData['GPS']['M']['latitude']['N']);
+                        const longitude = parseFloat(latestData['GPS']['M']['longitude']['N']);
+
+                        // upd drone marker position
+                        if (droneMarker) {
+                            droneMarker.setLatLng([latitude, longitude]);
+                        } else {
+                            // create drone marker 
+                            droneMarker = L.marker([latitude, longitude]).addTo(map).bindPopup('Drone Location');
+                        }
+                    } else {
+                        console.error('No data found to update drone marker.');
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // call updateDroneMarker initially and then set an interval to call it periodically
+        updateDroneMarker();
+        setInterval(updateDroneMarker, 5000); // fetch drone marker every 5 seconds
+
 
         // call fetchData initially and then set an interval to call it periodically
         fetchData();
         setInterval(fetchData, 5000); // fetch data every 5 seconds 
-        
+
+        // call fetchDataAndInitMap initially and then set an interval to call it periodically
+        fetchDataAndInitMap();
+        setInterval(fetchDataAndInitMap, 5000); // fetch coordinates every 5 seconds
     </script>
 </body>
 </html>
