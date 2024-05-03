@@ -71,12 +71,10 @@ def display_data():
 def update_delivery_status_route():
     data = request.get_json()
     delivery_status = data.get('deliveryStatus')  # get the new delivery status from request
-    # Update delivery status in Coordinates table
+    # update delivery status in Coordinates table
     update_delivery_status(delivery_status)
     return jsonify({'success': True})
 
 if __name__ == "__main__":
     app.run(debug=True)
 
-
-# convert unix time stamp to a number and then sort? 
