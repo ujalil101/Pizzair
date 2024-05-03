@@ -28,7 +28,7 @@ def retrieve_data_route():
 @app.route('/fetch_coordinates')
 def fetch_coordinates():
     try:
-        # Fetch coordinates from DynamoDB
+        # fetch coordinates from DynamoDB
         coordinates = fetch_coordinates_for_mapping()
         return jsonify(coordinates)
     except Exception as e:
