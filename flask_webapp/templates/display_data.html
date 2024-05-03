@@ -82,39 +82,46 @@
 
     <script>
         var mapInitialized = false; // check for track map initialization
-
+        var map; // declare map variable globally
+    
         function initMap(startLatitude, startLongitude, destinationLatitude, destinationLongitude) {
             if (!mapInitialized) { // check if map is not already initialized
-                var map = L.map('map').setView([destinationLatitude, destinationLongitude], 13);
-
+                map = L.map('map').setView([destinationLatitude, destinationLongitude], 13);
+    
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map);
-
-                // Define custom marker icons for start and destination
+    
+                // custom marker icons for start and destination
                 var startIcon = L.icon({
-                    iconUrl: '/static/MAP.png', // Replace 'start-icon.png' with the path to your start pin icon
-                    iconSize: [32, 32], // Adjust icon size as needed
-                    iconAnchor: [16, 32], // Adjust icon anchor as needed
-                    popupAnchor: [0, -32] // Adjust popup anchor as needed
+                    iconUrl: '/static/MAP.png',
+                    iconSize: [32, 32], 
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32]
                 });
-
+    
                 var destinationIcon = L.icon({
-                    iconUrl: '/static/FLAG.png', // Replace 'destination-icon.png' with the path to your destination pin icon
-                    iconSize: [32, 32], // Adjust icon size as needed
-                    iconAnchor: [16, 32], // Adjust icon anchor as needed
-                    popupAnchor: [0, -32] // Adjust popup anchor as needed
+                    iconUrl: '/static/FLAG.png', 
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 32],
+                    popupAnchor: [0, -32] 
                 });
-
-                // Add markers for start and destination with custom icons
+    
+                // add markers for start and destination with custom icons
                 L.marker([startLatitude, startLongitude], { icon: startIcon }).addTo(map).bindPopup('Start Location');
-                L.marker([destinationLatitude, destinationLongitude], { icon: destinationIcon }).addTo(map).bindPopup('Destination Location');
-
-                mapInitialized = true; // Set flag to true after initialization
+                // hardcoding destination since real address doesnt exist
+                
+                const farm_goal_lat =  47.64266351094032;
+                const farm_goal_long = -122.14127227922448;
+                L.marker([farm_goal_lat, farm_goal_long], { icon: destinationIcon }).addTo(map).bindPopup('Destination Location');
+    
+                //L.marker([destinationLatitude, destinationLongitude], { icon: destinationIcon }).addTo(map).bindPopup('Destination Location');
+    
+                mapInitialized = true; // flag to true after initialization
             }
         }
-
-
+    
+    
         // stop flight button 
         function toggleFlight() {
             var button = document.getElementById("stopFlightButton");
@@ -142,17 +149,14 @@
                 button.disabled = false; // show error
             });
         }
-
+    
         // function to fetch data from server and initialize map
         function fetchDataAndInitMap() {
             fetch('/fetch_coordinates')
                 .then(response => response.json())
                 .then(data => {
                     if (data.length > 0) {
-                        document.getElementById('latitude').textContent = data[0]['StartLatitude']['S'];
-                        document.getElementById('longitude').textContent = data[0]['StartLongitude']['S'];
-
-                        // Call initMap with start and destination coordinates
+                        // call initMap with start and destination coordinates
                         var startLatitude = parseFloat(data[0]['StartLatitude']['S']);
                         var startLongitude = parseFloat(data[0]['StartLongitude']['S']);
                         var destinationLatitude = parseFloat(data[0]['DestinationLatitude']['S']);
@@ -169,61 +173,61 @@
             fetch('/retrieve_data')
                 .then(response => response.json())
                 .then(data => {
-                    if (data.length > 0) {
-                        
-                        const latestData = data[0];
-                        
-                        // update your HTML elements with the latest data
-                        document.getElementById('image').src = latestData['Image']['S'];
-                        document.getElementById('latitude').textContent = latestData['GPS']['M']['latitude']['N'];
-                        document.getElementById('longitude').textContent = latestData['GPS']['M']['longitude']['N'];
-                        document.getElementById('accelerometer_x').textContent = latestData['Accelerometer']['M']['x']['N'];
-                        document.getElementById('accelerometer_y').textContent = latestData['Accelerometer']['M']['y']['N'];
-                        document.getElementById('accelerometer_z').textContent = latestData['Accelerometer']['M']['z']['N'];
-                        document.getElementById('speed').textContent = latestData['Control']['M']['mag']['S'];
-                        document.getElementById('direction').textContent = latestData['Control']['M']['direction']['S'];
-                        document.getElementById('magnitude').textContent = latestData['Control']['M']['mag']['S'];
-                        document.getElementById('safety').textContent = parseSafetyTensor(latestData['Control']['M']['Safety']['S']);
-                        function parseSafetyTensor(safetyString) {
-                            
-                            var values = safetyString.match(/\d+\.\d+/g);
-                            if (values.length >= 2) {
-                                return  values[0] + ', ' + values[1];
-                            }
-                            return 'Safety data not available';
-                        }
+                    if (data) {
+                        // update HTML elements with the latest data
+                        document.getElementById('image').src = data['Image']['S'];
+                        document.getElementById('latitude').textContent = data['GPS']['M']['latitude']['N'];
+                        document.getElementById('longitude').textContent = data['GPS']['M']['longitude']['N'];
+    
+                        document.getElementById('accelerometer_x').textContent = data['Accelerometer']['M']['x']['N'];
+                        document.getElementById('accelerometer_y').textContent = data['Accelerometer']['M']['y']['N'];
+                        document.getElementById('accelerometer_z').textContent = data['Accelerometer']['M']['z']['N'];
+                        document.getElementById('speed').textContent = data['Control']['M']['mag']['S'];
+                        document.getElementById('direction').textContent = data['Control']['M']['direction']['S'];
+                        document.getElementById('magnitude').textContent = data['Control']['M']['mag']['S'];
+                        document.getElementById('safety').textContent = parseSafetyTensor(data['Control']['M']['Safety']['S']);
                     } else {
+                        // if no data is returned, display a message
                         document.getElementById('noDataMsg').style.display = 'block';
                     }
                 })
                 .catch(error => console.error('Error fetching data:', error));
         }
-        // declare a global variable to hold the drone marker
+    
+        // func to parse safety tensor data
+        function parseSafetyTensor(safetyString) {
+            var values = safetyString.match(/\d+\.\d+/g);
+            if (values && values.length >= 2) {
+                return  values[0] + ', ' + values[1];
+            }
+            return 'Safety data not available';
+        }
+    
+    
         var droneMarker;
 
-        // function to fetch data from server and update drone marker position on the map
+        // func to update drone marker position
         function updateDroneMarker() {
             fetch('/retrieve_data')
                 .then(response => response.json())
                 .then(data => {
-                    if (data.length > 0) {
-                        const latestData = data[0];
-                        const latitude = parseFloat(latestData['GPS']['M']['latitude']['N']);
-                        const longitude = parseFloat(latestData['GPS']['M']['longitude']['N']);
-
-                        // Update drone marker position
+                    if (data) {
+                        const latitude = parseFloat(data['GPS']['M']['latitude']['N']);
+                        const longitude = parseFloat(data['GPS']['M']['longitude']['N']);
+    
+                        // update drone marker position
                         if (droneMarker) {
                             droneMarker.setLatLng([latitude, longitude]);
                         } else {
-                            // Create drone marker with custom icon
+                            // create drone marker with custom icon
                             var droneIcon = L.icon({
                                 iconUrl: '/static/DRONE.png',
                                 iconSize: [32, 32],
                                 iconAnchor: [16, 32],
                                 popupAnchor: [0, -32]
                             });
-
-                            // Create drone marker
+    
+                            // create drone marker
                             droneMarker = L.marker([latitude, longitude], { icon: droneIcon }).addTo(map).bindPopup('Drone Location');
                         }
                     } else {
@@ -232,19 +236,19 @@
                 })
                 .catch(error => console.error('Error fetching data:', error));
         }
-
-        // call updateDroneMarker initially and then set an interval to call it periodically
+    
+    
+        // call updateDroneMarker 
         updateDroneMarker();
         setInterval(updateDroneMarker, 5000); // fetch drone marker every 5 seconds
-
-
-        // call fetchData initially and then set an interval to call it periodically
+    
+    
+        // call fetchData 
         fetchData();
         setInterval(fetchData, 5000); // fetch data every 5 seconds 
-
-        // call fetchDataAndInitMap initially and then set an interval to call it periodically
+    
+        // call fetchDataAndInitMap 
         fetchDataAndInitMap();
         setInterval(fetchDataAndInitMap, 5000); // fetch coordinates every 5 seconds
     </script>
-</body>
-</html>
+    

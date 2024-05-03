@@ -25,7 +25,12 @@ def retrieve_data():
         response = dynamodb.scan(
             TableName=table_name
         )
-        return response['Items']
+        items = response['Items']
+        
+        # Sort items based on the timestamp in the Retrieve attribute
+        sorted_items = sorted(items, key=lambda x: float(x['Retrieve']['S']))
+        
+        return sorted_items[-1]
     except Exception as e:
         print("Error fetching data from DynamoDB:", e)
         return []

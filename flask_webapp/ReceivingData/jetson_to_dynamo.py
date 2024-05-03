@@ -27,7 +27,7 @@ def insert_data(dynamodb, image_url, gps_coordinates,start_gps,accelerometer_inf
         item = {
             'Retrieve': {'S': str(time.time())},  
             'Image': {'S': image_url},
-            'GPS': {'M': gps_coordinates},
+            'Current GPS': {'M': gps_coordinates},
             'Start_GPS': {'M': start_gps},
             'Accelerometer': {'M': accelerometer_info},
             'Control': {'M': {key: {'S': str(value)} for key, value in control_info.items()}}
