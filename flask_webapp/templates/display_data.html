@@ -91,13 +91,29 @@
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map);
 
-                // Add markers for start and destination
-                L.marker([startLatitude, startLongitude]).addTo(map).bindPopup('Start Location');
-                L.marker([destinationLatitude, destinationLongitude]).addTo(map).bindPopup('Destination Location');
+                // Define custom marker icons for start and destination
+                var startIcon = L.icon({
+                    iconUrl: '/static/MAP.png', // Replace 'start-icon.png' with the path to your start pin icon
+                    iconSize: [32, 32], // Adjust icon size as needed
+                    iconAnchor: [16, 32], // Adjust icon anchor as needed
+                    popupAnchor: [0, -32] // Adjust popup anchor as needed
+                });
+
+                var destinationIcon = L.icon({
+                    iconUrl: '/static/FLAG.png', // Replace 'destination-icon.png' with the path to your destination pin icon
+                    iconSize: [32, 32], // Adjust icon size as needed
+                    iconAnchor: [16, 32], // Adjust icon anchor as needed
+                    popupAnchor: [0, -32] // Adjust popup anchor as needed
+                });
+
+                // Add markers for start and destination with custom icons
+                L.marker([startLatitude, startLongitude], { icon: startIcon }).addTo(map).bindPopup('Start Location');
+                L.marker([destinationLatitude, destinationLongitude], { icon: destinationIcon }).addTo(map).bindPopup('Destination Location');
 
                 mapInitialized = true; // Set flag to true after initialization
             }
         }
+
 
         // stop flight button 
         function toggleFlight() {
@@ -195,12 +211,20 @@
                         const latitude = parseFloat(latestData['GPS']['M']['latitude']['N']);
                         const longitude = parseFloat(latestData['GPS']['M']['longitude']['N']);
 
-                        // upd drone marker position
+                        // Update drone marker position
                         if (droneMarker) {
                             droneMarker.setLatLng([latitude, longitude]);
                         } else {
-                            // create drone marker 
-                            droneMarker = L.marker([latitude, longitude]).addTo(map).bindPopup('Drone Location');
+                            // Create drone marker with custom icon
+                            var droneIcon = L.icon({
+                                iconUrl: '/static/DRONE.png',
+                                iconSize: [32, 32],
+                                iconAnchor: [16, 32],
+                                popupAnchor: [0, -32]
+                            });
+
+                            // Create drone marker
+                            droneMarker = L.marker([latitude, longitude], { icon: droneIcon }).addTo(map).bindPopup('Drone Location');
                         }
                     } else {
                         console.error('No data found to update drone marker.');
