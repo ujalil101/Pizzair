@@ -27,7 +27,7 @@ def retrieve_data():
         )
         items = response['Items']
         
-        # Sort items based on the timestamp in the Retrieve attribute
+        # sort items based on the timestamp in the Retrieve attribute
         sorted_items = sorted(items, key=lambda x: float(x['Retrieve']['S']))
         
         return sorted_items[-1]
