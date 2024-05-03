@@ -1,17 +1,17 @@
 from geopy.geocoders import GoogleV3
 
 def geocode_address(api_key, user_address):
-    # Initialize the geocoder with the API key
+    # initialize the geocoder with the API key
     geocoder = GoogleV3(api_key=api_key)
 
-    # Geocode the user-provided address
+    # geocode the user-provided address
     location = geocoder.geocode(
         query=user_address,
-        exactly_one=True  # Return one result
+        exactly_one=True  # return one result
     )
 
     if location:
-        # Print the coordinates (latitude and longitude)
+        # print the coordinates (latitude and longitude)
         print(f'Address: {location.address}')
         return location.latitude, location.longitude
     else:
